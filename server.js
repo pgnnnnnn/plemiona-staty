@@ -7,12 +7,11 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// baza SQLite
+// SQLite
 const db = new sqlite3.Database("./stats.db");
 
-// Tworzenie tabel
-db.run(`
-CREATE TABLE IF NOT EXISTS tribes (
+// Tworzymy tabele
+db.run(`CREATE TABLE IF NOT EXISTS tribes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   rank INTEGER,
   name TEXT UNIQUE,
@@ -20,11 +19,9 @@ CREATE TABLE IF NOT EXISTS tribes (
   villages INTEGER,
   members INTEGER,
   last_update TEXT
-);
-`);
+)`);
 
-db.run(`
-CREATE TABLE IF NOT EXISTS players (
+db.run(`CREATE TABLE IF NOT EXISTS players (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   rank INTEGER,
   name TEXT UNIQUE,
@@ -32,10 +29,9 @@ CREATE TABLE IF NOT EXISTS players (
   villages INTEGER,
   tribe TEXT,
   last_update TEXT
-);
-`);
+)`);
 
-// Funkcje fetch
+// Funkcja fetch plemion
 async function fetchTribes() {
   const url = "https://pl.twstats.com/pl224/index.php?page=ally";
   const { data } = await axios.get(url);
@@ -50,13 +46,14 @@ async function fetchTribes() {
       const points = parseInt($(tds[2]).text().replace(/\D/g,""));
       const villages = parseInt($(tds[3]).text().replace(/\D/g,""));
       const members = parseInt($(tds[4]).text().replace(/\D/g,""));
-      db.run(`
-        INSERT OR REPLACE INTO tribes (rank,name,points,villages,members,last_update)
-        VALUES (?, ?, ?, ?, ?, ?)`, [rank,name,points,villages,members,now]);
+      db.run(`INSERT OR REPLACE INTO tribes (rank,name,points,villages,members,last_update)
+              VALUES (?, ?, ?, ?, ?, ?)`,
+             [rank,name,points,villages,members,now]);
     }
   });
 }
 
+// Funkcja fetch graczy
 async function fetchPlayers() {
   const url = "https://pl.twstats.com/pl224/index.php?page=player";
   const { data } = await axios.get(url);
@@ -71,14 +68,14 @@ async function fetchPlayers() {
       const points = parseInt($(tds[2]).text().replace(/\D/g,""));
       const villages = parseInt($(tds[3]).text().replace(/\D/g,""));
       const tribe = $(tds[4]).text().trim();
-      db.run(`
-        INSERT OR REPLACE INTO players (rank,name,points,villages,tribe,last_update)
-        VALUES (?, ?, ?, ?, ?, ?)`, [rank,name,points,villages,tribe,now]);
+      db.run(`INSERT OR REPLACE INTO players (rank,name,points,villages,tribe,last_update)
+              VALUES (?, ?, ?, ?, ?, ?)`,
+             [rank,name,points,villages,tribe,now]);
     }
   });
 }
 
-// statyczne pliki public
+// statyczne pliki
 app.use(express.static(path.join(__dirname,"public")));
 
 // Strona główna
@@ -101,7 +98,7 @@ app.get("/api/players", (req,res)=>{
   });
 });
 
-// Ręczna aktualizacja
+// Ręczne odświeżenie danych
 app.get("/update", async (req,res)=>{
   await fetchTribes();
   await fetchPlayers();
