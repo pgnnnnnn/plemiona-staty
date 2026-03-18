@@ -2,38 +2,45 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Plemiona 224</title>
+<title>Ranking Graczy</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<h1>Ranking Plemion</h1>
+<h1>Ranking Graczy</h1>
 <button onclick="update()">Aktualizuj ręcznie</button>
-<table id="tribes">
-  <thead><tr><th>Rank</th><th>Plemie</th><th>Punkty</th><th>Wioski</th><th>Członków</th></tr></thead>
+<table id="players">
+  <thead>
+    <tr>
+      <th>Rank</th>
+      <th>Gracz</th>
+      <th>Punkty</th>
+      <th>Wioski</th>
+      <th>Plemie</th>
+    </tr>
+  </thead>
   <tbody></tbody>
 </table>
-
 <script>
-async function loadTribes(){
-  const res = await fetch("/api/tribes");
+async function loadPlayers(){
+  const res = await fetch("/api/players");
   const data = await res.json();
-  const tbody = document.querySelector("#tribes tbody");
+  const tbody = document.querySelector("#players tbody");
   tbody.innerHTML = "";
-  data.forEach(t=>{
+  data.forEach(p=>{
     tbody.innerHTML += `<tr>
-      <td>${t.rank}</td>
-      <td>${t.name}</td>
-      <td>${t.points}</td>
-      <td>${t.villages}</td>
-      <td>${t.members}</td>
+      <td>${p.rank}</td>
+      <td>${p.name}</td>
+      <td>${p.points}</td>
+      <td>${p.villages}</td>
+      <td>${p.tribe}</td>
     </tr>`;
   });
 }
 async function update(){
   await fetch("/update");
-  await loadTribes();
+  await loadPlayers();
 }
-loadTribes();
+loadPlayers();
 </script>
 </body>
 </html>
