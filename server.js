@@ -2,12 +2,15 @@ const express = require("express");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const sqlite3 = require("sqlite3").verbose();
+const path = require("path");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Baza SQLite
+// baza SQLite
 const db = new sqlite3.Database("./stats.db");
 
+// Tworzenie tabel
 db.run(`
 CREATE TABLE IF NOT EXISTS tribes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +35,7 @@ CREATE TABLE IF NOT EXISTS players (
 );
 `);
 
-// Funkcja pobierania plemion
+// Funkcje fetch
 async function fetchTribes() {
   const url = "https://pl.twstats.com/pl224/index.php?page=ally";
   const { data } = await axios.get(url);
@@ -54,7 +57,6 @@ async function fetchTribes() {
   });
 }
 
-// Funkcja pobierania graczy
 async function fetchPlayers() {
   const url = "https://pl.twstats.com/pl224/index.php?page=player";
   const { data } = await axios.get(url);
@@ -76,29 +78,34 @@ async function fetchPlayers() {
   });
 }
 
-app.use(express.static("public"));
+// statyczne pliki public
+app.use(express.static(path.join(__dirname,"public")));
+
+// Strona główna
+app.get("/", (req,res)=>{
+  res.sendFile(path.join(__dirname,"public","index.html"));
+});
 
 // API
 app.get("/api/tribes", (req,res)=>{
-  db.all("SELECT * FROM tribes ORDER BY rank ASC", [], (err,rows)=>{
+  db.all("SELECT * FROM tribes ORDER BY rank ASC",[],(err,rows)=>{
     if(err) return res.status(500).json({error:err.message});
     res.json(rows);
   });
 });
 
 app.get("/api/players", (req,res)=>{
-  db.all("SELECT * FROM players ORDER BY rank ASC", [], (err,rows)=>{
+  db.all("SELECT * FROM players ORDER BY rank ASC",[],(err,rows)=>{
     if(err) return res.status(500).json({error:err.message});
     res.json(rows);
   });
 });
 
-// Ręczne odświeżanie
+// Ręczna aktualizacja
 app.get("/update", async (req,res)=>{
   await fetchTribes();
   await fetchPlayers();
   res.json({message:"Zaktualizowano dane"});
 });
 
-// Start
-app.listen(PORT, ()=>console.log("Serwer działa na porcie "+PORT));
+app.listen(PORT,()=>console.log(`Server działa na porcie ${PORT}`));
