@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Plemiona 224</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Ranking Plemion</h1>
+<button onclick="update()">Aktualizuj ręcznie</button>
+<table id="tribes">
+  <thead><tr><th>Rank</th><th>Plemie</th><th>Punkty</th><th>Wioski</th><th>Członków</th></tr></thead>
+  <tbody></tbody>
+</table>
+
+<script>
+async function loadTribes(){
+  const res = await fetch("/api/tribes");
+  const data = await res.json();
+  const tbody = document.querySelector("#tribes tbody");
+  tbody.innerHTML = "";
+  data.forEach(t=>{
+    tbody.innerHTML += `<tr>
+      <td>${t.rank}</td>
+      <td>${t.name}</td>
+      <td>${t.points}</td>
+      <td>${t.villages}</td>
+      <td>${t.members}</td>
+    </tr>`;
+  });
+}
+async function update(){
+  await fetch("/update");
+  await loadTribes();
+}
+loadTribes();
+</script>
+</body>
+</html>
