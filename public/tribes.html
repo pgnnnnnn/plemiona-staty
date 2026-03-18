@@ -2,17 +2,24 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Plemiona 224</title>
+<title>Ranking Plemion</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <h1>Ranking Plemion</h1>
 <button onclick="update()">Aktualizuj ręcznie</button>
 <table id="tribes">
-  <thead><tr><th>Rank</th><th>Plemie</th><th>Punkty</th><th>Wioski</th><th>Członków</th></tr></thead>
+  <thead>
+    <tr>
+      <th>Rank</th>
+      <th>Plemie</th>
+      <th>Punkty</th>
+      <th>Wioski</th>
+      <th>Członków</th>
+    </tr>
+  </thead>
   <tbody></tbody>
 </table>
-
 <script>
 async function loadTribes(){
   const res = await fetch("/api/tribes");
