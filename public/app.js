@@ -1,4 +1,5 @@
 const id = window.location.pathname.split("/")[2];
+
 fetch("/api/stats/" + id)
   .then(res => res.json())
   .then(data => {
@@ -12,4 +13,6 @@ fetch("/api/stats/" + id)
     document.getElementById("worldId").innerText = id;
     document.getElementById("created").innerText = data.created;
   })
-  .catch(()=>{document.getElementById("worldName").innerText="Brak danych"});
+  .catch(() => {
+    document.getElementById("worldName").innerText = "Brak danych";
+  });
