@@ -11,7 +11,7 @@
 
 <h1>Ranking plemion</h1>
 
-<input id="search" placeholder="Szukaj plemienia...">
+<input id="search" placeholder="Szukaj...">
 
 <table>
 <thead>
@@ -32,28 +32,23 @@
 let data=[];
 
 async function init(){
-  const res = await fetch("/api/tribes");
+  const res = await fetch("/tribes.json");
   data = await res.json();
+
+  data.sort((a,b)=>b.points-a.points);
+
   render();
 }
 
 document.getElementById("search").addEventListener("input", render);
 
-function normalize(text){
-  return (text || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
 function render(){
-  const q = normalize(document.getElementById("search").value);
+  const q = document.getElementById("search").value.toLowerCase();
 
   let i=1;
 
   document.getElementById("t").innerHTML =
-  data
-  .filter(x=> normalize(x.tag).includes(q))
+  data.filter(x => (x.tag||"").toLowerCase().includes(q))
   .slice(0,200)
   .map(x=>`
   <tr>
