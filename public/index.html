@@ -3,62 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <title>Staty Plemiion</title>
-<style>
-body { font-family: Arial; background:#111; color:white; text-align:center; }
-table { margin:20px auto; border-collapse:collapse; }
-td,th { padding:6px; border:1px solid #333; }
-canvas { background:black; margin-top:20px; }
-button { margin:5px; }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>📊 Staty Plemiion</h1>
+<div class="header">
+    <h1>📊 Staty Plemiion</h1>
 
-<select id="world">
-    <option value="pl224">pl224</option>
-    <option value="pl226">pl226</option>
-</select>
+    <div class="controls">
+        <select id="world">
+            <option value="pl224">pl224</option>
+            <option value="pl226">pl226</option>
+        </select>
 
-<button id="warBtn">🔥 wojny</button>
+        <button id="warBtn">🔥 Wojny</button>
+    </div>
+</div>
 
-<h2>👤 Gracze</h2>
-<table id="table">
-<thead>
-<tr><th>#</th><th>Gracz</th><th>Punkty</th></tr>
-</thead>
-<tbody></tbody>
-</table>
+<div class="container">
 
-<h2>🏰 Plemiona (Twoje dane)</h2>
-<table id="tribes">
-<thead>
-<tr>
-<th>#</th>
-<th>Plemię</th>
-<th>Punkty</th>
-<th>Gracze</th>
-<th>⚔️</th>
-<th>🛡️</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
+    <div class="card">
+        <h2>👤 TOP Gracze</h2>
+        <table id="table">
+            <thead>
+                <tr><th>#</th><th>Gracz</th><th>Punkty</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-<h2>📋 Plemiona (oficjalne guest.php)</h2>
-<table id="guest">
-<thead>
-<tr>
-<th>#</th>
-<th>Plemię</th>
-<th>Punkty</th>
-<th>Gracze</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
+    <div class="card">
+        <h2>🏰 Plemiona</h2>
+        <table id="tribes">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Plemię</th>
+                    <th>Punkty</th>
+                    <th>Gracze</th>
+                    <th>⚔️</th>
+                    <th>🛡️</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-<canvas id="map" width="500" height="500"></canvas>
+    <div class="card">
+        <h2>📋 Oficjalne (guest)</h2>
+        <table id="guest">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Plemię</th>
+                    <th>Punkty</th>
+                    <th>Gracze</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="card full">
+        <h2>🗺️ Mapa dominacji</h2>
+        <canvas id="map"></canvas>
+    </div>
+
+</div>
 
 <script src="app.js"></script>
 </body>
