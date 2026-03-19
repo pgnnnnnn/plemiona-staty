@@ -1,5 +1,6 @@
 const express = require("express");
 const axios = require("axios");
+const fs = require("fs");
 const path = require("path");
 
 const app = express();
@@ -7,9 +8,9 @@ const PORT = process.env.PORT || 3000;
 
 let tribes = [];
 let players = [];
-let gains = [];
+let history = {};
 
-// 🔄 MAP DATA
+// 🔄 LOAD MAP
 async function loadMap(){
   try{
     const ally = await axios.get("https://pl224.plemiona.pl/map/ally.txt");
@@ -24,17 +25,24 @@ async function loadMap(){
       };
     });
 
-    const player = await axios.get("https://pl224.plemiona.pl/map/player.txt");
-    players = player.data.split("\n").map(line=>{
-      const [id,name,tribe,villages,points] = line.split(",");
-      return {
-        id,
-        name: name || "",
-        tribe,
-        villages: +villages || 0,
-        points: +points || 0
-      };
+    const now = Date.now();
+
+    // 🔥 HISTORIA
+    tribes.forEach(t=>{
+      if(!history[t.id]) history[t.id]=[];
+
+      history[t.id].push({
+        time: now,
+        points: t.points
+      });
+
+      // max 288 wpisów = 24h (co 5 min)
+      if(history[t.id].length > 288){
+        history[t.id].shift();
+      }
     });
+
+    fs.writeFileSync("history.json", JSON.stringify(history));
 
     console.log("MAP OK");
   }catch(e){
@@ -42,37 +50,14 @@ async function loadMap(){
   }
 }
 
-// 🔥 TWSTATS GAIN (LEKKI SCRAP)
-async function loadGain(){
-  try{
-    const {data} = await axios.get("https://pl.twstats.com/pl224/index.php?page=ally", {timeout:8000});
-
-    const rows = data.split("<tr>").slice(1);
-
-    gains = rows.map(r=>{
-      const cols = r.split("<td>");
-
-      const tag = (cols[2] || "").replace(/<[^>]+>/g,"").trim();
-      const gain = (cols[6] || "").replace(/<[^>]+>/g,"").trim();
-
-      return {
-        tag,
-        gain: parseInt(gain.replace(/\D/g,"")) || 0
-      };
-    }).filter(x=>x.tag);
-
-    console.log("GAIN OK");
-  }catch(e){
-    console.log("GAIN ERR:", e.message);
-  }
+// LOAD HISTORY
+if(fs.existsSync("history.json")){
+  history = JSON.parse(fs.readFileSync("history.json"));
 }
 
-// INIT
+// START
 loadMap();
-loadGain();
-
 setInterval(loadMap, 1000 * 60 * 5);
-setInterval(loadGain, 1000 * 60 * 10);
 
 // STATIC
 app.use(express.static(path.join(__dirname,"public")));
@@ -82,12 +67,26 @@ app.get("/api/tribes",(req,res)=>{
   res.json(tribes.sort((a,b)=>b.points-a.points));
 });
 
-app.get("/api/players",(req,res)=>{
-  res.json(players.sort((a,b)=>b.points-a.points));
-});
-
+// 🔥 GAIN (24H)
 app.get("/api/gain",(req,res)=>{
-  res.json(gains);
+
+  const result = tribes.map(t=>{
+    const h = history[t.id] || [];
+
+    if(h.length < 2){
+      return {...t, gain:0};
+    }
+
+    const first = h[0].points;
+    const last = h[h.length-1].points;
+
+    return {
+      ...t,
+      gain: last - first
+    };
+  });
+
+  res.json(result.sort((a,b)=>b.gain-a.gain).slice(0,100));
 });
 
 app.listen(PORT,()=>console.log("Server działa"));
