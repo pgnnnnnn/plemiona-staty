@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
 <meta charset="UTF-8">
 <title>Gracze</title>
@@ -9,7 +9,7 @@
 
 <div class="container panel">
 
-<h1>Gracze</h1>
+<h1>Ranking graczy</h1>
 
 <input id="search" placeholder="Szukaj gracza...">
 
@@ -29,7 +29,7 @@
 </div>
 
 <script>
-let data=[];
+let data = [];
 
 async function init(){
   const res = await fetch("/api/players");
@@ -37,24 +37,34 @@ async function init(){
   render();
 }
 
+// 🔥 FIX wyszukiwarki (polskie znaki)
 document.getElementById("search").addEventListener("input", render);
 
-function render(){
-  const q = document.getElementById("search").value.toLowerCase();
+function normalize(text){
+  return (text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
 
-  let i=1;
+function render(){
+  const q = normalize(document.getElementById("search").value);
+
+  let i = 1;
 
   document.getElementById("t").innerHTML =
-  data.filter(x=> (x.name||"").toLowerCase().includes(q))
+  data
+  .filter(x => normalize(x.name).includes(q))
   .slice(0,300)
   .map(x=>`
-  <tr>
-    <td>${i++}</td>
-    <td>${x.name}</td>
-    <td>${x.points}</td>
-    <td>${x.villages}</td>
-    <td>${x.tribe}</td>
-  </tr>`).join("");
+    <tr>
+      <td>${i++}</td>
+      <td>${x.name}</td>
+      <td>${x.points}</td>
+      <td>${x.villages}</td>
+      <td>${x.tribe}</td>
+    </tr>
+  `).join("");
 }
 
 init();
