@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <title>Plemie</title>
 <link rel="stylesheet" href="style.css">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 <body>
 
@@ -20,19 +24,9 @@
 
 <h1 id="name"></h1>
 
-<p class="muted" id="stats"></p>
+<p id="gain" class="muted"></p>
 
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Nick</th>
-<th>Punkty</th>
-<th>Wioski</th>
-</tr>
-</thead>
-<tbody id="t"></tbody>
-</table>
+<canvas id="chart"></canvas>
 
 </div>
 
@@ -43,23 +37,44 @@ const id = new URLSearchParams(location.search).get("id");
 
 async function load(){
   const res = await fetch("/api/tribe/"+id);
-  const d = await res.json();
+  const data = await res.json();
 
-  document.getElementById("name").innerText = d.tribe.tag;
-  document.getElementById("stats").innerText =
-    "Punkty: "+d.tribe.points+" | Wioski: "+d.tribe.villages;
+  document.getElementById("name").innerText = data.tribe.tag;
 
-  let i=1;
+  // 🔥 LICZENIE GAIN
+  if (data.history.length > 1) {
+    const first = data.history[0].points;
+    const last = data.history[data.history.length-1].points;
+    const gain = last - first;
 
-  document.getElementById("t").innerHTML =
-  d.members.map(p=>`
-    <tr>
-      <td>${i++}</td>
-      <td>${p.name}</td>
-      <td>${p.points}</td>
-      <td>${p.villages}</td>
-    </tr>
-  `).join("");
+    document.getElementById("gain").innerText =
+      "Przyrost: +" + gain + " pkt";
+  }
+
+  // 📊 WYKRES
+  const labels = data.history.map(x => {
+    const d = new Date(x.time);
+    return d.getHours() + ":" + d.getMinutes();
+  });
+
+  const points = data.history.map(x => x.points);
+
+  new Chart(document.getElementById("chart"), {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Punkty",
+        data: points
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display:false }
+      }
+    }
+  });
 }
 
 load();
