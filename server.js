@@ -68,16 +68,12 @@ async function loadMap(){
   }
 }
 
-// 🔥 AGRESOR (TWSTATS PLAYERS OD)
+// 🔥 AGRESOR (TWStats)
 async function loadAggro(){
   try{
     const res = await axios.get(
       "https://pl.twstats.com/pl224/index.php?page=rankings&mode=playersod",
-      {
-        headers:{
-          "User-Agent":"Mozilla/5.0"
-        }
-      }
+      { headers:{ "User-Agent":"Mozilla/5.0" } }
     );
 
     const $ = cheerio.load(res.data);
