@@ -1,35 +1,32 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Ranking Plemion 224</title>
+<title>Plemiona</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Ranking Plemion — Świat 224</h1>
+<h1>Ranking Plemion</h1>
+<button onclick="update()">Aktualizuj</button>
 
-<button onclick="update()">🔄 Aktualizuj ręcznie</button>
-
-<table id="tribes">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Plemie</th>
-      <th>Punkty</th>
-      <th>Wioski</th>
-      <th>Członkowie</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
+<table id="t">
+<thead>
+<tr>
+<th>#</th>
+<th>Plemie</th>
+<th>Punkty</th>
+<th>Wioski</th>
+<th>Członkowie</th>
+</tr>
+</thead>
+<tbody></tbody>
 </table>
 
 <script>
-async function loadTribes(){
+async function load(){
   const res = await fetch("/api/tribes");
   const data = await res.json();
-
-  const tbody = document.querySelector("#tribes tbody");
+  const tbody = document.querySelector("tbody");
   tbody.innerHTML = "";
 
   data.forEach(t=>{
@@ -37,25 +34,19 @@ async function loadTribes(){
       <tr>
         <td>${t.rank}</td>
         <td>${t.name}</td>
-        <td>${t.points.toLocaleString()}</td>
-        <td>${t.villages.toLocaleString()}</td>
+        <td>${t.points}</td>
+        <td>${t.villages}</td>
         <td>${t.members}</td>
-      </tr>
-    `;
+      </tr>`;
   });
 }
 
 async function update(){
-  document.querySelector("button").innerText = "⏳ Aktualizowanie...";
-  
   await fetch("/update");
-
-  await loadTribes();
-
-  document.querySelector("button").innerText = "🔄 Aktualizuj ręcznie";
+  load();
 }
 
-loadTribes();
+load();
 </script>
 
 </body>
