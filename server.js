@@ -1,5 +1,6 @@
 const express = require("express");
 const axios = require("axios");
+const iconv = require("iconv-lite");
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 
@@ -34,7 +35,7 @@ async function fetchTribes() {
   const res = await axios.get("https://pl224.plemiona.pl/map/ally.txt", {
     responseType: "arraybuffer"
   });
-  const data = res.data.toString("utf-8");
+  const data = iconv.decode(Buffer.from(res.data), 'windows-1250');
   const lines = data.split("\n");
 
   db.run("DELETE FROM tribes");
@@ -57,7 +58,7 @@ async function fetchPlayers() {
   const res = await axios.get("https://pl224.plemiona.pl/map/player.txt", {
     responseType: "arraybuffer"
   });
-  const data = res.data.toString("utf-8");
+  const data = iconv.decode(Buffer.from(res.data), 'windows-1250');
   const lines = data.split("\n");
 
   db.run("DELETE FROM players");
