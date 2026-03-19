@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Porównanie</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container panel">
+
+<h1>Porównanie plemion</h1>
+
+<input id="a" placeholder="Tag 1">
+<input id="b" placeholder="Tag 2">
+
+<button onclick="compare()">Porównaj</button>
+
+<div id="out"></div>
+
+</div>
+
+<script>
+let tribes=[];
+
+async function init(){
+  const res=await fetch("/api/tribes");
+  tribes=await res.json();
+}
+
+function compare(){
+  const a=document.getElementById("a").value;
+  const b=document.getElementById("b").value;
+
+  const t1=tribes.find(x=>x.tag==a);
+  const t2=tribes.find(x=>x.tag==b);
+
+  document.getElementById("out").innerHTML=`
+    ${a}: ${t1?.points||0}<br>
+    ${b}: ${t2?.points||0}
+  `;
+}
+
+init();
+</script>
+
+</body>
+</html>
