@@ -11,16 +11,16 @@
 
 <h1>Ranking graczy</h1>
 
-<input id="search" placeholder="Szukaj gracza...">
+<input id="search" placeholder="Szukaj...">
 
 <table>
 <thead>
 <tr>
-<th>#</th>
-<th>Nick</th>
-<th>Punkty</th>
-<th>Wioski</th>
-<th>Plemie</th>
+<th onclick="sortBy('rank')">#</th>
+<th onclick="sortBy('name')">Nick</th>
+<th onclick="sortBy('points')">Punkty</th>
+<th onclick="sortBy('villages')">Wioski</th>
+<th onclick="sortBy('tribe')">Plemie</th>
 </tr>
 </thead>
 <tbody id="t"></tbody>
@@ -30,31 +30,54 @@
 
 <script>
 let data=[];
+let sortKey="points";
+let asc=false;
 
 async function init(){
-  const res = await fetch("/api/players");
-  data = await res.json();
+  const res=await fetch("/api/players");
+  data=await res.json();
+  render();
+}
+
+function sortBy(key){
+  if(sortKey===key){
+    asc=!asc;
+  }else{
+    sortKey=key;
+    asc=false;
+  }
   render();
 }
 
 document.getElementById("search").addEventListener("input", render);
 
 function render(){
-  const q = document.getElementById("search").value.toLowerCase();
+  const q=document.getElementById("search").value.toLowerCase();
+
+  let list=[...data]
+  .filter(x =>
+    x.name.toLowerCase().includes(q) ||
+    (x.tribe||"").toLowerCase().includes(q)
+  )
+  .sort((a,b)=>{
+    if(sortKey==="name" || sortKey==="tribe"){
+      return asc
+        ? (a[sortKey]||"").localeCompare(b[sortKey]||"")
+        : (b[sortKey]||"").localeCompare(a[sortKey]||"");
+    }
+    return asc ? a[sortKey]-b[sortKey] : b[sortKey]-a[sortKey];
+  });
 
   let i=1;
 
   document.getElementById("t").innerHTML =
-  data
-  .filter(x => (x.name||"").toLowerCase().includes(q))
-  .slice(0,300)
-  .map(x=>`
+  list.slice(0,300).map(x=>`
     <tr>
       <td>${i++}</td>
       <td>${x.name}</td>
       <td>${x.points}</td>
       <td>${x.villages}</td>
-      <td>${x.tribe}</td>
+      <td style="color:${x.color}">${x.tribe}</td>
     </tr>
   `).join("");
 }
