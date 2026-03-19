@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Gracz</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="nav">
+  <div class="logo">STATY 224</div>
+  <div>
+    <a href="/players.html">← Powrót</a>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="panel">
+
+<h1 id="name"></h1>
+
+<p id="stats"></p>
+
+<p>
+<a id="tw" target="_blank">Zobacz na TWStats</a>
+</p>
+
+</div>
+
+</div>
+
+<script>
+const id = new URLSearchParams(location.search).get("id");
+
+async function load(){
+  const res = await fetch("/api/player/"+id);
+  const p = await res.json();
+
+  document.getElementById("name").innerText = p.name || "Brak danych";
+
+  document.getElementById("stats").innerText =
+    "Punkty: " + (p.points || 0) +
+    " | Wioski: " + (p.villages || 0);
+
+  document.getElementById("tw").href =
+    "https://pl.twstats.com/pl224/index.php?page=player&id=" + id;
+}
+
+load();
+</script>
+
+</body>
+</html>
