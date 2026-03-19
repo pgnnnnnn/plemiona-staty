@@ -42,18 +42,11 @@ db.serialize(() => {
 // --- FETCH PLEMION ---
 async function fetchTribes() {
   try {
-    const url = "https://pl.twstats.com/pl224/index.php?page=achievements&display=tranking";
+    const url = "https://api.allorigins.win/raw?url=" + encodeURIComponent(
+      "https://pl.twstats.com/pl224/index.php?page=achievements&display=tranking"
+    );
 
-  const res = await axios.get(url, {
-  headers: {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-    "Accept": "text/html,application/xhtml+xml",
-    "Accept-Language": "pl-PL,pl;q=0.9",
-    "Connection": "keep-alive",
-    "Referer": "https://pl.twstats.com/"
-  }
-});
-
+    const res = await axios.get(url);
     const $ = cheerio.load(res.data);
     const now = new Date().toISOString();
 
@@ -91,12 +84,11 @@ async function fetchTribes() {
 // --- FETCH GRACZY ---
 async function fetchPlayers() {
   try {
-    const url = "https://pl.twstats.com/pl224/index.php?page=player";
+    const url = "https://api.allorigins.win/raw?url=" + encodeURIComponent(
+      "https://pl.twstats.com/pl224/index.php?page=player"
+    );
 
-    const res = await axios.get(url, {
-      headers: { "User-Agent": "Mozilla/5.0" }
-    });
-
+    const res = await axios.get(url);
     const $ = cheerio.load(res.data);
     const now = new Date().toISOString();
 
@@ -154,21 +146,24 @@ app.get("/api/players", (req, res) => {
   });
 });
 
-// --- UPDATE ---
+// --- DELAY ---
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// --- UPDATE ---
 app.get("/update", async (req, res) => {
   try {
     await fetchTribes();
-
-    await sleep(2000); // przerwa 2 sekundy
-
+    await sleep(2000);
     await fetchPlayers();
-
     res.json({ message: "Zaktualizowano dane" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// --- START ---
+app.listen(PORT, () => {
+  console.log("Serwer działa na porcie " + PORT);
 });
