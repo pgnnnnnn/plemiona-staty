@@ -6,70 +6,74 @@
 <link rel="stylesheet" href="style.css">
 
 <style>
-table {
+table{
   width:100%;
   border-collapse:collapse;
   table-layout:fixed;
 }
 
-th, td {
+th, td{
   padding:10px;
   border-bottom:1px solid #1a1a1a;
   text-align:center;
 }
 
-th {
+th{
   background:#1f1f1f;
   cursor:pointer;
 }
 
-/* 📐 kolumny */
+/* 📐 KOLUMNY */
 th:nth-child(1), td:nth-child(1){ width:60px; }
 th:nth-child(2), td:nth-child(2){ width:40%; text-align:left; }
 th:nth-child(3), td:nth-child(3){ width:20%; }
 th:nth-child(4), td:nth-child(4){ width:15%; }
 th:nth-child(5), td:nth-child(5){ width:20%; }
 
+/* nick padding */
+td:nth-child(2){
+  padding-left:15px;
+}
+
 /* hover */
-tr:hover { background:#1a1a1a; }
+tr:hover{
+  background:#1a1a1a;
+}
 
 /* top3 */
-.top1 { background:rgba(255,215,0,0.1); }
-.top2 { background:rgba(192,192,192,0.1); }
-.top3 { background:rgba(205,127,50,0.1); }
-
-.search {
-  width:100%;
-  padding:10px;
-  background:#1f1f1f;
-  border:none;
-  color:#fff;
-  margin-bottom:10px;
-}
+tr:nth-child(1){ background:rgba(255,215,0,0.1); }
+tr:nth-child(2){ background:rgba(192,192,192,0.1); }
+tr:nth-child(3){ background:rgba(205,127,50,0.1); }
 </style>
-</head>
 
+</head>
 <body>
 
 <div class="layout">
 
-<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
   <div class="toggle" onclick="toggle()">☰</div>
   <div class="logo">STATY</div>
 
   <div class="menu">
-    <a href="/">🏠 Dashboard</a>
-    <a href="/players.html" class="active">👤 Gracze</a>
-    <a href="/tribes.html">⚔️ Plemiona</a>
+    <a href="/">🏠 <span class="text">Dashboard</span></a>
+    <a href="/players.html" class="active">👤 <span class="text">Gracze</span></a>
+    <a href="/tribes.html">⚔️ <span class="text">Plemiona</span></a>
   </div>
 </div>
 
-<!-- CONTENT -->
 <div class="content">
+
 <div class="panel">
 
-<input class="search" placeholder="Szukaj..." oninput="searchPlayer(this.value)">
+<div class="back" onclick="history.back()">← Powrót</div>
+
+<h1>Gracze</h1>
+
+<div id="timer" class="timer"></div>
+<div class="refresh" onclick="manualRefresh()">↻ Odśwież teraz</div>
+
+<input id="search" placeholder="Szukaj...">
 
 <table>
 <thead>
@@ -81,17 +85,16 @@ tr:hover { background:#1a1a1a; }
 <th onclick="sortBy('tribe')">Plemie</th>
 </tr>
 </thead>
-
 <tbody id="t"></tbody>
 </table>
 
 </div>
+
 </div>
 
 </div>
 
 <script>
-// sidebar toggle
 function toggle(){
   const s=document.getElementById("sidebar");
   s.classList.toggle("collapsed");
@@ -104,82 +107,75 @@ window.onload=()=>{
   }
 };
 
-// DATA
 let data=[];
-let filtered=[];
 let sortKey="points";
-let sortDir="desc";
+let asc=false;
 
-// LOAD
 async function init(){
-  const res = await fetch("/api/players");
-  data = await res.json();
-  filtered = data;
+  const res=await fetch("/api/players");
+  data=await res.json();
   render();
 }
 
-// SEARCH
-function searchPlayer(val){
-  val = val.toLowerCase();
-
-  filtered = data.filter(p =>
-    p.name.toLowerCase().includes(val) ||
-    p.tribe.toLowerCase().includes(val)
-  );
-
+function sortBy(k){
+  if(sortKey===k){asc=!asc;} else {sortKey=k;asc=false;}
   render();
 }
 
-// SORT
-function sortBy(key){
-  if(sortKey===key){
-    sortDir = sortDir==="asc" ? "desc" : "asc";
-  } else {
-    sortKey = key;
-    sortDir = "desc";
-  }
-  render();
-}
+document.getElementById("search").addEventListener("input", render);
 
-// RENDER
 function render(){
+  const q=document.getElementById("search").value.toLowerCase();
 
-  let sorted=[...filtered];
-
-  sorted.sort((a,b)=>{
-    let val;
-
-    if(sortKey==="name" || sortKey==="tribe"){
-      val = a[sortKey].localeCompare(b[sortKey]);
-    } else {
-      val = a[sortKey] - b[sortKey];
+  let list=[...data]
+  .filter(x=>x.name.toLowerCase().includes(q)||(x.tribe||"").toLowerCase().includes(q))
+  .sort((a,b)=>{
+    if(sortKey==="name"||sortKey==="tribe"){
+      return asc?a[sortKey].localeCompare(b[sortKey]):b[sortKey].localeCompare(a[sortKey]);
     }
-
-    return sortDir==="asc" ? val : -val;
+    return asc?a[sortKey]-b[sortKey]:b[sortKey]-a[sortKey];
   });
 
-  document.getElementById("t").innerHTML =
-  sorted.map((p,i)=>{
+  let i=1;
 
-    let cls="";
-    if(i===0) cls="top1";
-    if(i===1) cls="top2";
-    if(i===2) cls="top3";
-
-    return `
-    <tr class="${cls}">
-      <td>${i+1}</td>
-      <td style="text-align:left;padding-left:15px">${p.name}</td>
-      <td>${p.points.toLocaleString()}</td>
-      <td>${p.villages}</td>
-      <td style="color:${p.color}">${p.tribe}</td>
+  document.getElementById("t").innerHTML=
+  list.slice(0,300).map(x=>`
+    <tr>
+      <td>${i++}</td>
+      <td>${x.name}</td>
+      <td>${x.points.toLocaleString()}</td>
+      <td>${x.villages}</td>
+      <td onclick="go(${x.tribeId})" style="color:${x.color};cursor:pointer">${x.tribe}</td>
     </tr>
-    `;
-  }).join("");
+  `).join("");
 }
 
-// START
+function go(id){
+  location.href="/tribe.html?id="+id;
+}
+
+let refreshTime=300;
+let current=refreshTime;
+
+function startTimer(){
+  setInterval(()=>{
+    current--;
+    document.getElementById("timer").innerText="Odświeżanie za: "+current+"s";
+
+    if(current<=0){
+      current=refreshTime;
+      init();
+    }
+  },1000);
+}
+
+function manualRefresh(){
+  current=refreshTime;
+  init();
+}
+
 init();
+startTimer();
 </script>
 
 </body>
