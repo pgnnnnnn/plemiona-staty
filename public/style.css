@@ -124,3 +124,10 @@ tr:hover {
   color:#fff;
   display:block;
 }
+
+canvas {
+  margin-top:20px;
+  background:#111;
+  padding:10px;
+  border-radius:10px;
+}
