@@ -1,190 +1,125 @@
-let currentWorld="pl224";
-let villagesData=[];
-let playersData=[];
-let historyFiles=[];
-let replayIndex=0;
-let heatmapWar=false;
+const table = document.querySelector("#table tbody");
+const tribeTable = document.querySelector("#tribes tbody");
+const canvas = document.getElementById("map");
+const ctx = canvas.getContext("2d");
 
-const tribeColors={};
+let warMode = false;
 
-function getColor(t){
-    if(!tribeColors[t]){
-        tribeColors[t]=`hsl(${Math.random()*360},70%,50%)`;
+const tribeColors = {};
+
+function getColor(tribe){
+    if(!tribeColors[tribe]){
+        tribeColors[tribe] = `hsl(${Math.random()*360},70%,50%)`;
     }
-    return tribeColors[t];
+    return tribeColors[tribe];
 }
 
-document.getElementById("worldSelect").onchange=e=>{
-    currentWorld=e.target.value;
-    loadWorld();
+document.getElementById("world").onchange = load;
+
+document.getElementById("warBtn").onclick = () => {
+    warMode = !warMode;
+    load();
 };
 
-async function loadWorld(){
-    const data=await fetch(`/api/world/${currentWorld}`).then(r=>r.json());
-    villagesData=data.villages;
-    playersData=data.players;
+function calculateWar(conquers){
 
-    loadHistory();
-}
+    const stats = {};
 
-async function loadHistory(){
-    historyFiles=await fetch(`/api/history/${currentWorld}`).then(r=>r.json());
-    historyFiles.sort();
+    conquers.forEach(c=>{
+        if(!stats[c.newPlayer]) stats[c.newPlayer]={attack:0,def:0};
+        if(!stats[c.oldPlayer]) stats[c.oldPlayer]={attack:0,def:0};
 
-    const grid=document.getElementById("dateGrid");
-    grid.innerHTML="";
-
-    historyFiles.forEach((d,i)=>{
-        const btn=document.createElement("button");
-        btn.innerText=d;
-        btn.onclick=()=>{replayIndex=i;loadReplay();};
-        grid.appendChild(btn);
+        stats[c.newPlayer].attack++;
+        stats[c.oldPlayer].def++;
     });
 
-    loadReplay();
+    return stats;
 }
 
-async function loadReplay(){
-    const date=historyFiles[replayIndex];
-    document.getElementById("dateLabel").innerText=date;
+async function load(){
 
-    const players=await fetch(`/api/history/${currentWorld}/${date}`).then(r=>r.json());
-    const worldData=await fetch(`/api/world/${currentWorld}`).then(r=>r.json());
+    const world = document.getElementById("world").value;
 
-    drawMap(players, worldData.conquers);
-    loadTable(players, worldData.conquers);
-    loadChart(players);
-}
+    table.innerHTML = "Ładowanie...";
 
-function drawMap(players, conquers){
+    const data = await fetch(`/api/data/${world}`).then(r=>r.json());
 
-    const canvas=document.getElementById("map");
-    const ctx=canvas.getContext("2d");
+    const warStats = calculateWar(data.conquers);
 
-    canvas.width=800;
-    canvas.height=800;
+    const playerMap = {};
+    data.players.forEach(p => playerMap[p.id] = p.tribe);
 
-    ctx.fillStyle="black";
-    ctx.fillRect(0,0,800,800);
+    // GRACZE
+    table.innerHTML = "";
 
-    const gridSize=20;
-    const grid={}, war={};
-
-    players.forEach(p=>{
-        villagesData.filter(v=>v.player==p.id).forEach(v=>{
-            const k=Math.floor(v.x/gridSize)+"_"+Math.floor(v.y/gridSize);
-            if(!grid[k]) grid[k]={};
-            grid[k][p.tribe]=(grid[k][p.tribe]||0)+1;
+    data.players
+        .sort((a,b)=>b.points-a.points)
+        .slice(0,20)
+        .forEach((p,i)=>{
+            const tr=document.createElement("tr");
+            tr.innerHTML = `
+                <td>${i+1}</td>
+                <td style="color:${getColor(p.tribe)}">${p.name}</td>
+                <td>${p.points.toLocaleString()}</td>
+            `;
+            table.appendChild(tr);
         });
-    });
 
-    conquers.forEach(c=>{
-        const v=villagesData.find(v=>v.id==c.village);
-        if(!v) return;
-        const k=Math.floor(v.x/gridSize)+"_"+Math.floor(v.y/gridSize);
-        war[k]=(war[k]||0)+1;
-    });
+    // PLEMIONA
+    const tribes = {};
 
-    Object.keys(grid).forEach(k=>{
-        const [gx,gy]=k.split("_");
-
-        let maxT=null,max=0;
-        for(let t in grid[k]){
-            if(grid[k][t]>max){
-                max=grid[k][t];
-                maxT=t;
-            }
+    data.players.forEach(p=>{
+        if(!tribes[p.tribe]){
+            tribes[p.tribe] = { points:0, members:0, a:0, d:0 };
         }
 
-        if(heatmapWar && war[k]){
-            ctx.fillStyle=`rgba(255,0,0,${Math.min(war[k]/5,1)})`;
-        } else {
-            ctx.fillStyle=getColor(maxT);
-        }
-
-        ctx.fillRect(gx*20,gy*20,20,20);
-    });
-}
-
-function loadTable(players, conquers){
-
-    const stats={};
-
-    conquers.forEach(c=>{
-        if(!stats[c.newPlayer]) stats[c.newPlayer]={a:0,d:0};
-        if(!stats[c.oldPlayer]) stats[c.oldPlayer]={a:0,d:0};
-
-        stats[c.newPlayer].a++;
-        stats[c.oldPlayer].d++;
-    });
-
-    const tribes={};
-
-    players.forEach(p=>{
-        if(!tribes[p.tribe]) tribes[p.tribe]={points:0,members:0,a:0,d:0};
-        tribes[p.tribe].points+=p.points;
+        tribes[p.tribe].points += p.points;
         tribes[p.tribe].members++;
 
-        if(stats[p.id]){
-            tribes[p.tribe].a+=stats[p.id].a;
-            tribes[p.tribe].d+=stats[p.id].d;
+        if(warStats[p.id]){
+            tribes[p.tribe].a += warStats[p.id].attack;
+            tribes[p.tribe].d += warStats[p.id].def;
         }
     });
 
-    const tbody=document.querySelector("#tribeTable tbody");
-    tbody.innerHTML="";
+    tribeTable.innerHTML = "";
 
     Object.entries(tribes)
-        .sort((a,b)=>b[1].points-a[1].points)
+        .sort((a,b)=>b[1].points - a[1].points)
         .slice(0,15)
-        .forEach(([t,d],i)=>{
+        .forEach(([t,data],i)=>{
 
-            const ratio=d.d? (d.a/d.d).toFixed(2):d.a;
+            const tr = document.createElement("tr");
 
-            const tr=document.createElement("tr");
-
-            tr.innerHTML=`
-            <td>${i+1}</td>
-            <td style="color:${getColor(t)}">${t}</td>
-            <td>${d.points.toLocaleString()}</td>
-            <td>${d.members}</td>
-            <td style="color:red">${d.a}</td>
-            <td style="color:blue">${d.d}</td>
-            <td>${ratio}</td>
+            tr.innerHTML = `
+                <td>${i+1}</td>
+                <td style="color:${getColor(t)}">${t}</td>
+                <td>${data.points.toLocaleString()}</td>
+                <td>${data.members}</td>
+                <td style="color:red">${data.a}</td>
+                <td style="color:blue">${data.d}</td>
             `;
 
-            tbody.appendChild(tr);
+            tribeTable.appendChild(tr);
         });
-}
 
-function loadChart(players){
+    // MAPA
+    ctx.fillStyle="black";
+    ctx.fillRect(0,0,500,500);
 
-    const tribes={};
+    data.villages.forEach(v=>{
 
-    players.forEach(p=>{
-        if(!tribes[p.tribe]) tribes[p.tribe]=0;
-        tribes[p.tribe]+=p.points;
-    });
+        const tribe = playerMap[v.player] || "0";
 
-    const sorted=Object.entries(tribes)
-        .sort((a,b)=>b[1]-a[1])
-        .slice(0,5);
-
-    new Chart(document.getElementById("tribeChart"),{
-        type:"bar",
-        data:{
-            labels:sorted.map(x=>x[0]),
-            datasets:[{
-                data:sorted.map(x=>x[1]),
-                backgroundColor:sorted.map(x=>getColor(x[0]))
-            }]
+        if(warMode){
+            const count = data.conquers.filter(c=>c.village == v.id).length;
+            ctx.fillStyle = `rgba(255,0,0,${Math.min(count/5,1)})`;
+        } else {
+            ctx.fillStyle = getColor(tribe);
         }
+
+        ctx.fillRect(v.x/2, v.y/2, 1, 1);
     });
 }
 
-document.getElementById("warHeatmapBtn").onclick=()=>{
-    heatmapWar=!heatmapWar;
-    loadReplay();
-};
-
-loadWorld();
+load();
