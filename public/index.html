@@ -16,6 +16,7 @@
   background:#1f1f1f;
   padding:10px;
   font-size:12px;
+  cursor:pointer;
 }
 
 .big-table td {
@@ -28,9 +29,12 @@
   background:#222;
 }
 
-.tag {
-  font-weight:bold;
-}
+/* 🏆 TOP 3 */
+.top1 { background:rgba(255,215,0,0.15); }
+.top2 { background:rgba(192,192,192,0.15); }
+.top3 { background:rgba(205,127,50,0.15); }
+
+.tag { font-weight:bold; }
 
 .green { color:#2ecc71; }
 .red { color:#e74c3c; }
@@ -47,51 +51,46 @@
 
 <div class="layout">
 
-<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
   <div class="toggle" onclick="toggle()">☰</div>
   <div class="logo">STATY</div>
 
   <div class="menu">
-    <a href="/" class="active">🏠 <span class="text">Dashboard</span></a>
-    <a href="/players.html">👤 <span class="text">Gracze</span></a>
-    <a href="/tribes.html">⚔️ <span class="text">Plemiona</span></a>
+    <a href="/" class="active">🏠 Dashboard</a>
+    <a href="/players.html">👤 Gracze</a>
+    <a href="/tribes.html">⚔️ Plemiona</a>
   </div>
 </div>
 
-<!-- CONTENT -->
 <div class="content">
-
 <div class="panel">
 
 <div class="header-bar">
   <h1>Ranking Rodzin</h1>
   <div>
-    <div id="timer" class="timer"></div>
-    <div class="refresh" onclick="manualRefresh()">↻ Odśwież</div>
+    <div id="timer"></div>
+    <div onclick="manualRefresh()">↻</div>
   </div>
 </div>
 
 <table class="big-table">
 <thead>
 <tr>
-<th>#</th>
-<th>Plemie</th>
-<th>Punkty</th>
-<th>Gracze</th>
-<th>Wioski</th>
-<th>Śr / gracz</th>
+<th onclick="setSort('rank')">#</th>
+<th onclick="setSort('tag')">Plemie</th>
+<th onclick="setSort('points')">Punkty</th>
+<th onclick="setSort('members')">Gracze</th>
+<th onclick="setSort('villages')">Wioski</th>
+<th onclick="setSort('avg')">Śr</th>
 <th>ODA</th>
-<th>Δ Punkty</th>
+<th onclick="setSort('gain')">Δ</th>
 </tr>
 </thead>
 <tbody id="t"></tbody>
 </table>
 
 </div>
-
 </div>
-
 </div>
 
 <script>
@@ -110,37 +109,67 @@ window.onload=()=>{
 
 // DATA
 let data=[];
+let sortKey="points";
+let sortDir="desc";
 
+// LOAD
 async function init(){
   const res=await fetch("/api/tribes");
   data=await res.json();
   render();
 }
 
-// 🔥 RENDER (NAPRAWIONY)
+// SORT
+function setSort(key){
+  if(sortKey===key){
+    sortDir = sortDir==="asc" ? "desc" : "asc";
+  } else {
+    sortKey = key;
+    sortDir = "desc";
+  }
+  render();
+}
+
+// RENDER
 function render(){
-  let i=1;
+  let sorted=[...data].map(x=>{
+    return {
+      ...x,
+      avg: Math.round(x.points/(x.members||1))
+    };
+  });
+
+  sorted.sort((a,b)=>{
+    let val;
+
+    if(sortKey==="tag"){
+      val = a.tag.localeCompare(b.tag);
+    } else {
+      val = a[sortKey] - b[sortKey];
+    }
+
+    return sortDir==="asc" ? val : -val;
+  });
 
   document.getElementById("t").innerHTML =
-  data.sort((a,b)=>b.points-a.points).map(x=>{
+  sorted.map((x,i)=>{
 
-    const avg = Math.round(x.points / (x.members || 1));
+    let cls="";
+    if(i===0) cls="top1";
+    if(i===1) cls="top2";
+    if(i===2) cls="top3";
 
     return `
-    <tr>
-      <td>${i++}</td>
+    <tr class="${cls}">
+      <td>${i+1}</td>
       <td class="tag" style="color:${x.color}">${x.tag}</td>
       <td>${x.points.toLocaleString()}</td>
       <td>${x.members}</td>
       <td>${x.villages}</td>
-      <td>${avg.toLocaleString()}</td>
-
-      <!-- ODA wyłączone -->
+      <td>${x.avg.toLocaleString()}</td>
       <td>—</td>
-
-      <!-- REALNY PRZYROST -->
-      <td class="${x.gain >= 0 ? 'green' : 'red'}">
-        ${x.gain >= 0 ? '+' : ''}${x.gain.toLocaleString()}
+      <td class="${x.gain>=0?'green':'red'}">
+        ${x.gain>=0?'+':''}${x.gain.toLocaleString()}
       </td>
     </tr>
     `;
@@ -148,32 +177,25 @@ function render(){
 }
 
 // TIMER
-let refreshTime=300;
-let current=refreshTime;
+let t=300;
 
-function startTimer(){
-  setInterval(()=>{
-    current--;
+setInterval(()=>{
+  t--;
+  document.getElementById("timer").innerText="Refresh: "+t;
 
-    document.getElementById("timer").innerText =
-      "Odświeżanie za: "+current+"s";
-
-    if(current<=0){
-      current=refreshTime;
-      init();
-    }
-
-  },1000);
-}
+  if(t<=0){
+    t=300;
+    init();
+  }
+},1000);
 
 function manualRefresh(){
-  current=refreshTime;
+  t=300;
   init();
 }
 
 // START
 init();
-startTimer();
 </script>
 
 </body>
