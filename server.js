@@ -5,16 +5,14 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// cache danych (jak mikamait)
 let tribes = [];
 let players = [];
 
-// 🔥 POBIERANIE DANYCH Z MAPY (STABILNE)
+// 🔄 UPDATE DATA
 async function updateData() {
   try {
-    console.log("Aktualizacja danych...");
+    console.log("Update...");
 
-    // PLEMIONA
     const ally = await axios.get("https://pl224.plemiona.pl/map/ally.txt");
     tribes = ally.data.split("\n").map(line => {
       const [id, name, tag, members, villages, points] = line.split(",");
@@ -28,7 +26,6 @@ async function updateData() {
       };
     });
 
-    // GRACZE
     const player = await axios.get("https://pl224.plemiona.pl/map/player.txt");
     players = player.data.split("\n").map(line => {
       const [id, name, tribe, villages, points] = line.split(",");
@@ -41,31 +38,32 @@ async function updateData() {
       };
     });
 
-    console.log("OK update");
+    console.log("OK");
   } catch (e) {
-    console.log("Błąd update:", e.message);
+    console.log("ERR:", e.message);
   }
 }
 
-// pierwsze odpalenie
 updateData();
-
-// co 5 minut
 setInterval(updateData, 1000 * 60 * 5);
 
 // STATIC
 app.use(express.static(path.join(__dirname, "public")));
 
-// API
+// API LISTA
 app.get("/api/tribes", (req, res) => {
-  const sorted = tribes.sort((a, b) => b.points - a.points);
-  res.json(sorted.slice(0, 100));
+  res.json(tribes.sort((a,b)=>b.points-a.points));
 });
 
-app.get("/api/players", (req, res) => {
-  const sorted = players.sort((a, b) => b.points - a.points);
-  res.json(sorted.slice(0, 100));
+// API SZCZEGÓŁY PLEMIONA
+app.get("/api/tribe/:id", (req, res) => {
+  const id = req.params.id;
+
+  const tribe = tribes.find(t => t.id == id);
+  const members = players.filter(p => p.tribe == id)
+    .sort((a,b)=>b.points-a.points);
+
+  res.json({ tribe, members });
 });
 
-// START
 app.listen(PORT, () => console.log("Server działa"));
