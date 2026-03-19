@@ -1,21 +1,23 @@
 const express = require("express");
 const axios = require("axios");
-const cheerio = require("cheerio");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 let tribes = [];
 let players = [];
-let tribeAggro = {};
 
-// 🎨 KOLORY
+// plik historii
+const FILE = "history.json";
+
+// kolory
 const tribeColors = {
-  "AMA":"#ff8000","AMA!":"#ff8000","AMA$":"#ff8000","AMA.":"#ff8000",
-  "FF":"#00e5ff","FF.":"#00e5ff","FF..":"#00e5ff","FF:":"#00e5ff",
-  "AK":"#0033ff","AK!":"#0033ff","AK!!":"#0033ff","AK!!!":"#0033ff",
-  "OB!":"#ff0000","OB":"#ff0000","OB?":"#ff0000",
+  "AMA":"#ff8000",
+  "FF":"#00e5ff",
+  "AK":"#0033ff",
+  "OB":"#ff0000"
 };
 
 // UTF
@@ -24,113 +26,97 @@ async function getUTF(url){
   return Buffer.from(res.data,"binary").toString("utf8");
 }
 
-// 🔥 MAPA
+// 🔥 LOAD MAP
 async function loadMap(){
-  try{
-    const ally = await getUTF("https://pl224.plemiona.pl/map/ally.txt");
+  const ally = await getUTF("https://pl224.plemiona.pl/map/ally.txt");
 
-    tribes = ally.split("\n").map(line=>{
-      const [id,name,tag,members,villages,points] = line.split(",");
+  tribes = ally.split("\n").map(line=>{
+    const [id,name,tag,members,villages,points] = line.split(",");
 
-      const cleanTag = decodeURIComponent((tag||"").replace(/\+/g," "));
+    const cleanTag = decodeURIComponent((tag||"").replace(/\+/g," "));
 
-      return {
-        id,
-        tag: cleanTag,
-        members:+members||0,
-        villages:+villages||0,
-        points:+points||0,
-        color: tribeColors[cleanTag] || "#888"
-      };
-    });
+    return {
+      id,
+      tag: cleanTag,
+      members:+members||0,
+      villages:+villages||0,
+      points:+points||0,
+      color: tribeColors[cleanTag] || "#888"
+    };
+  });
 
-    const player = await getUTF("https://pl224.plemiona.pl/map/player.txt");
-
-    players = player.split("\n").map(line=>{
-      const [id,name,tribe,villages,points] = line.split(",");
-
-      const t = tribes.find(x=>x.id==tribe);
-
-      return {
-        id,
-        name: decodeURIComponent((name||"").replace(/\+/g," ")),
-        tribeId: tribe,
-        tribe: t ? t.tag : "",
-        color: t ? t.color : "#999",
-        villages:+villages||0,
-        points:+points||0
-      };
-    });
-
-    console.log("MAP OK");
-  }catch(e){
-    console.log("ERR:",e.message);
-  }
+  console.log("MAP OK");
 }
 
-// 🔥 AGRESOR (TWStats)
-async function loadAggro(){
-  try{
-    const res = await axios.get(
-      "https://pl.twstats.com/pl224/index.php?page=rankings&mode=playersod",
-      { headers:{ "User-Agent":"Mozilla/5.0" } }
-    );
+// 🔥 ZAPIS HISTORII
+function saveHistory(){
+  let data = {};
 
-    const $ = cheerio.load(res.data);
-
-    tribeAggro = {};
-
-    $("table tr").each((i,row)=>{
-      const tds = $(row).find("td");
-
-      if(tds.length > 5){
-        let tribe = $(tds[2]).text().trim();
-        let points = $(tds[4]).text().replace(/\./g,"");
-
-        tribe = tribe.replace(/[^A-Z]/g,"");
-
-        if(!tribeAggro[tribe]){
-          tribeAggro[tribe] = 0;
-        }
-
-        tribeAggro[tribe] += parseInt(points)||0;
-      }
-    });
-
-    console.log("AGGRO OK");
-  }catch(e){
-    console.log("AGGRO ERR:",e.message);
+  if(fs.existsSync(FILE)){
+    data = JSON.parse(fs.readFileSync(FILE));
   }
+
+  const today = new Date().toISOString().slice(0,10);
+
+  data[today] = tribes;
+
+  fs.writeFileSync(FILE, JSON.stringify(data,null,2));
+}
+
+// 🔥 OBLICZ PRZYROST
+function getGains(){
+  if(!fs.existsSync(FILE)) return {};
+
+  const data = JSON.parse(fs.readFileSync(FILE));
+  const days = Object.keys(data).sort();
+
+  if(days.length < 2) return {};
+
+  const today = data[days[days.length-1]];
+  const prev = data[days[days.length-2]];
+
+  let gains = {};
+
+  today.forEach(t=>{
+    const p = prev.find(x=>x.tag===t.tag);
+
+    gains[t.tag] = {
+      points: p ? t.points - p.points : 0,
+      villages: p ? t.villages - p.villages : 0,
+      members: p ? t.members - p.members : 0
+    };
+  });
+
+  return gains;
 }
 
 // START
-loadMap();
-loadAggro();
+async function start(){
+  await loadMap();
+  saveHistory();
+}
+start();
 
-setInterval(loadMap,1000*60*5);
-setInterval(loadAggro,1000*60*5);
+setInterval(async ()=>{
+  await loadMap();
+  saveHistory();
+},1000*60*5);
 
 // STATIC
 app.use(express.static(path.join(__dirname,"public")));
 
 // API
-app.get("/api/tribes",(req,res)=>{
+app.get("/api/dashboard",(req,res)=>{
+  const gains = getGains();
+
   const merged = tribes.map(t=>{
     return {
       ...t,
-      aggro: tribeAggro[t.tag] || 0
+      gain: gains[t.tag] || {points:0,villages:0,members:0}
     };
   });
 
-  res.json(merged);
-});
-
-app.get("/api/players",(req,res)=>{
-  res.json(players);
-});
-
-app.get("/api/tribe/:id",(req,res)=>{
-  res.json(players.filter(p=>p.tribeId==req.params.id));
+  res.json(merged.sort((a,b)=>b.points-a.points));
 });
 
 app.listen(PORT,()=>console.log("Server działa"));
