@@ -16,7 +16,7 @@
     </select>
 
     <button id="playBtn">▶️</button>
-    <button id="exportBtn">📸</button>
+    <button id="warHeatmapBtn">🔥 Wojna</button>
 
     <input type="range" id="slider">
     <span id="dateLabel"></span>
@@ -24,25 +24,16 @@
 
 <div class="card">
     <h3>📅 Historia</h3>
-    <div id="dateGrid" class="date-grid"></div>
-</div>
-
-<div class="grid">
-
-    <div class="card">
-        <h3>📊 Top plemiona (punkty)</h3>
-        <canvas id="tribeChart"></canvas>
-    </div>
-
-    <div class="card">
-        <h3>📈 Przyrost plemion (delta)</h3>
-        <canvas id="growthChart"></canvas>
-    </div>
-
+    <div id="dateGrid"></div>
 </div>
 
 <div class="card">
-    <h3>🏰 Ranking plemion</h3>
+    <h3>📊 Plemiona</h3>
+    <canvas id="tribeChart"></canvas>
+</div>
+
+<div class="card">
+    <h3>🏰 Ranking</h3>
     <table id="tribeTable">
         <thead>
             <tr>
@@ -50,6 +41,9 @@
                 <th>Plemię</th>
                 <th>Punkty</th>
                 <th>Gracze</th>
+                <th>⚔️</th>
+                <th>🛡️</th>
+                <th>Ratio</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -57,9 +51,8 @@
 </div>
 
 <div class="card">
-    <h3>🗺️ Mapa dominacji</h3>
+    <h3>🗺️ Mapa</h3>
     <canvas id="map"></canvas>
-    <div id="legend"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
