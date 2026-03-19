@@ -6,30 +6,11 @@
 <link rel="stylesheet" href="style.css">
 
 <style>
-.big-table {
-  width:100%;
-  border-collapse:collapse;
-  margin-top:20px;
-}
+.big-table { width:100%; border-collapse:collapse; margin-top:20px; }
+.big-table th { background:#1f1f1f; padding:10px; font-size:12px; cursor:pointer; }
+.big-table td { padding:8px; border-bottom:1px solid #1a1a1a; text-align:center; }
+.big-table tr:hover { background:#222; }
 
-.big-table th {
-  background:#1f1f1f;
-  padding:10px;
-  font-size:12px;
-  cursor:pointer;
-}
-
-.big-table td {
-  padding:8px;
-  border-bottom:1px solid #1a1a1a;
-  text-align:center;
-}
-
-.big-table tr:hover {
-  background:#222;
-}
-
-/* 🏆 TOP 3 */
 .top1 { background:rgba(255,215,0,0.15); }
 .top2 { background:rgba(192,192,192,0.15); }
 .top3 { background:rgba(205,127,50,0.15); }
@@ -41,11 +22,27 @@
 
 .header-bar {
   display:flex;
-  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:10px;
   align-items:center;
 }
-</style>
 
+input {
+  padding:6px;
+  background:#1f1f1f;
+  border:none;
+  color:#fff;
+  width:120px;
+}
+
+.search { width:200px; }
+
+.reset-btn {
+  background:#e74c3c;
+  padding:6px 10px;
+  cursor:pointer;
+}
+</style>
 </head>
 <body>
 
@@ -67,6 +64,23 @@
 
 <div class="header-bar">
   <h1>Ranking Rodzin</h1>
+
+  <!-- SEARCH -->
+  <input id="searchInput" class="search" placeholder="Szukaj..." oninput="setSearch(this.value)">
+
+  <!-- FILTERY -->
+  <input id="pointsMin" placeholder="Min pkt" oninput="setFilter('pointsMin', this.value)">
+  <input id="pointsMax" placeholder="Max pkt" oninput="setFilter('pointsMax', this.value)">
+
+  <input id="membersMin" placeholder="Min graczy" oninput="setFilter('membersMin', this.value)">
+  <input id="membersMax" placeholder="Max graczy" oninput="setFilter('membersMax', this.value)">
+
+  <input id="villagesMin" placeholder="Min wiosek" oninput="setFilter('villagesMin', this.value)">
+  <input id="villagesMax" placeholder="Max wiosek" oninput="setFilter('villagesMax', this.value)">
+
+  <!-- RESET -->
+  <div class="reset-btn" onclick="resetFilters()">Reset</div>
+
   <div>
     <div id="timer"></div>
     <div onclick="manualRefresh()">↻</div>
@@ -101,21 +115,82 @@ function toggle(){
   localStorage.setItem("sidebar", s.classList.contains("collapsed"));
 }
 
-window.onload=()=>{
-  if(localStorage.getItem("sidebar")==="true"){
-    document.getElementById("sidebar").classList.add("collapsed");
-  }
-};
-
-// DATA
+// STATE
 let data=[];
 let sortKey="points";
 let sortDir="desc";
+let search="";
+let filters={
+  pointsMin:null, pointsMax:null,
+  membersMin:null, membersMax:null,
+  villagesMin:null, villagesMax:null
+};
+
+// 🔥 LOAD SAVED SETTINGS
+function loadSettings(){
+  const saved = JSON.parse(localStorage.getItem("filters")||"{}");
+
+  search = saved.search || "";
+  filters = saved.filters || filters;
+  sortKey = saved.sortKey || "points";
+  sortDir = saved.sortDir || "desc";
+
+  // inputy
+  document.getElementById("searchInput").value = search;
+
+  Object.keys(filters).forEach(k=>{
+    const el = document.getElementById(k);
+    if(el) el.value = filters[k] ?? "";
+  });
+}
+
+// 💾 SAVE SETTINGS
+function saveSettings(){
+  localStorage.setItem("filters", JSON.stringify({
+    search,
+    filters,
+    sortKey,
+    sortDir
+  }));
+}
 
 // LOAD
 async function init(){
+  loadSettings();
+
   const res=await fetch("/api/tribes");
   data=await res.json();
+
+  render();
+}
+
+// SEARCH
+function setSearch(val){
+  search = val.toLowerCase();
+  saveSettings();
+  render();
+}
+
+// FILTER
+function setFilter(key,val){
+  filters[key] = val ? parseInt(val) : null;
+  saveSettings();
+  render();
+}
+
+// RESET
+function resetFilters(){
+  search="";
+  filters={
+    pointsMin:null, pointsMax:null,
+    membersMin:null, membersMax:null,
+    villagesMin:null, villagesMax:null
+  };
+
+  localStorage.removeItem("filters");
+
+  document.querySelectorAll("input").forEach(i=>i.value="");
+
   render();
 }
 
@@ -127,17 +202,32 @@ function setSort(key){
     sortKey = key;
     sortDir = "desc";
   }
+  saveSettings();
   render();
 }
 
 // RENDER
 function render(){
-  let sorted=[...data].map(x=>{
-    return {
-      ...x,
-      avg: Math.round(x.points/(x.members||1))
-    };
+
+  let filtered = data.filter(x => {
+    if(!x.tag.toLowerCase().includes(search)) return false;
+
+    if(filters.pointsMin && x.points < filters.pointsMin) return false;
+    if(filters.pointsMax && x.points > filters.pointsMax) return false;
+
+    if(filters.membersMin && x.members < filters.membersMin) return false;
+    if(filters.membersMax && x.members > filters.membersMax) return false;
+
+    if(filters.villagesMin && x.villages < filters.villagesMin) return false;
+    if(filters.villagesMax && x.villages > filters.villagesMax) return false;
+
+    return true;
   });
+
+  let sorted=[...filtered].map(x=>({
+    ...x,
+    avg: Math.round(x.points/(x.members||1))
+  }));
 
   sorted.sort((a,b)=>{
     let val;
@@ -145,7 +235,7 @@ function render(){
     if(sortKey==="tag"){
       val = a.tag.localeCompare(b.tag);
     } else {
-      val = a[sortKey] - b[sortKey];
+      val = (a[sortKey]||0) - (b[sortKey]||0);
     }
 
     return sortDir==="asc" ? val : -val;
