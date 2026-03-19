@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 let tribes = [];
 let players = [];
 
-// 🔥 KLUCZ: pobieranie jako UTF-8
+// 🔥 POBIERANIE UTF-8
 async function getUTF(url){
   const res = await axios.get(url, {
     responseType: "arraybuffer"
@@ -17,7 +17,7 @@ async function getUTF(url){
   return Buffer.from(res.data, "binary").toString("utf8");
 }
 
-// 🔄 LOAD MAP
+// 🔄 LOAD MAP (NAPRAWIONE ZNAKI)
 async function loadMap(){
   try{
     // PLEMIONA
@@ -28,8 +28,8 @@ async function loadMap(){
 
       return {
         id,
-        name: name || "",
-        tag: tag || "",
+        name: decodeURIComponent(name || ""),
+        tag: decodeURIComponent(tag || ""),
         members: +members || 0,
         villages: +villages || 0,
         points: +points || 0
@@ -44,7 +44,7 @@ async function loadMap(){
 
       return {
         id,
-        name: name || "",
+        name: decodeURIComponent(name || ""),
         tribe,
         villages: +villages || 0,
         points: +points || 0
@@ -73,4 +73,5 @@ app.get("/api/players",(req,res)=>{
   res.json(players.sort((a,b)=>b.points-a.points));
 });
 
+// START SERVER
 app.listen(PORT,()=>console.log("Server działa"));
