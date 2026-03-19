@@ -61,6 +61,29 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/api/tribes", (req, res) => {
   res.json(tribes.sort((a,b)=>b.points-a.points));
 });
+// 🔥 RANKING PRZYROSTÓW
+app.get("/api/gain", (req, res) => {
+
+  const gains = tribes.map(t => {
+    const hist = history[t.id] || [];
+
+    if (hist.length < 2) {
+      return { ...t, gain: 0 };
+    }
+
+    const first = hist[0].points;
+    const last = hist[hist.length - 1].points;
+
+    return {
+      ...t,
+      gain: last - first
+    };
+  });
+
+  const sorted = gains.sort((a,b)=>b.gain - a.gain);
+
+  res.json(sorted.slice(0,100));
+});
 
 // API SZCZEGÓŁ + HISTORIA
 app.get("/api/tribe/:id", (req, res) => {
