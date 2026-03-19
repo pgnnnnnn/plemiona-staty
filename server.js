@@ -7,11 +7,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 let tribes = [];
-let players = [];
 
-const FILE = "history.json";
+const HISTORY_FILE = "history.json";
+const REPORTS_FILE = "reports.json";
 
-// kolory
 const tribeColors = {
   "AMA":"#ff8000",
   "FF":"#00e5ff",
@@ -43,47 +42,70 @@ async function loadMap(){
       color: tribeColors[cleanTag] || "#888"
     };
   });
+
+  console.log("MAP OK");
 }
 
-// SAVE HISTORY
+// HISTORY
 function saveHistory(){
   let data = {};
-
-  if(fs.existsSync(FILE)){
-    data = JSON.parse(fs.readFileSync(FILE));
+  if(fs.existsSync(HISTORY_FILE)){
+    data = JSON.parse(fs.readFileSync(HISTORY_FILE));
   }
 
   const now = new Date().toISOString();
-
   data[now] = tribes;
 
-  fs.writeFileSync(FILE, JSON.stringify(data,null,2));
+  fs.writeFileSync(HISTORY_FILE, JSON.stringify(data,null,2));
 }
 
-// CALC
-function calc(){
-  if(!fs.existsSync(FILE)) return [];
+// 🔥 RA/RO
+function calcRaro(){
+  if(!fs.existsSync(REPORTS_FILE)) return {};
 
-  const data = JSON.parse(fs.readFileSync(FILE));
+  const reports = JSON.parse(fs.readFileSync(REPORTS_FILE));
+
+  let result = {};
+
+  reports.forEach(r=>{
+    const atk = r.attacker.tribe;
+    const def = r.defender.tribe;
+
+    if(!result[atk]) result[atk] = { ra:0, ro:0 };
+    if(!result[def]) result[def] = { ra:0, ro:0 };
+
+    result[atk].ra += r.attacker.killed || 0;
+    result[def].ro += r.defender.lost || 0;
+  });
+
+  return result;
+}
+
+// DASHBOARD
+function calc(){
+  if(!fs.existsSync(HISTORY_FILE)) return [];
+
+  const data = JSON.parse(fs.readFileSync(HISTORY_FILE));
   const keys = Object.keys(data).sort();
 
   if(keys.length < 2) return [];
 
-  const now = data[keys[keys.length-1]];
+  const cur = data[keys[keys.length-1]];
   const prev = data[keys[keys.length-2]];
 
-  const total = now.reduce((a,b)=>a+b.points,0);
+  const total = cur.reduce((a,b)=>a+b.points,0);
+  const raro = calcRaro();
 
-  return now.map(t=>{
+  return cur.map(t=>{
     const p = prev.find(x=>x.tag===t.tag) || {};
-
-    const gain = t.points - (p.points||0);
-    const dom = ((t.points / total) * 100).toFixed(2);
+    const r = raro[t.tag] || { ra:0, ro:0 };
 
     return {
       ...t,
-      gain,
-      dom
+      gain: t.points - (p.points||0),
+      dom: total ? ((t.points / total) * 100).toFixed(2) : 0,
+      ra: r.ra,
+      ro: r.ro
     };
   }).sort((a,b)=>b.points-a.points);
 }
