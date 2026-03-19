@@ -1,25 +1,55 @@
 body {
-    background:#0d1117;
-    color:white;
+    background:#f5f6f8;
     font-family:Arial;
+    margin:0;
 }
 
-.container {
-    display:flex;
-}
-
-.table-box, .map-box {
-    width:50%;
+h1 {
     padding:20px;
+}
+
+.top-bar {
+    padding:10px;
+    background:white;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    border-bottom:1px solid #ddd;
+}
+
+.card {
+    background:white;
+    margin:20px;
+    padding:15px;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 
 canvas {
     width:100%;
     background:black;
-    margin:10px 0;
+    border-radius:10px;
 }
 
-.tools, .replay {
-    text-align:center;
-    margin:10px;
+.date-grid {
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+}
+
+.date-btn {
+    padding:5px 10px;
+    background:#eee;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+.date-btn.active {
+    background:#4caf50;
+    color:white;
+}
+
+#legend {
+    margin-top:10px;
+    font-size:12px;
 }
