@@ -9,17 +9,23 @@
 
 <div class="layout">
 
-<div class="sidebar">
-  <div class="logo">STATY 224</div>
+<!-- 🔥 SIDEBAR -->
+<div class="sidebar" id="sidebar">
+
+  <div class="toggle" onclick="toggle()">☰</div>
+
+  <div class="logo">STATY</div>
 
   <div class="menu">
-    <a href="/">Dashboard</a>
-    <a href="/players.html" class="active">Gracze</a>
-    <a href="/tribes.html">Plemiona</a>
-    <a href="/map.html">Mapa</a>
+    <a href="/"><span class="icon">🏠</span><span class="text">Dashboard</span></a>
+    <a href="/players.html" class="active"><span class="icon">👤</span><span class="text">Gracze</span></a>
+    <a href="/tribes.html"><span class="icon">⚔️</span><span class="text">Plemiona</span></a>
+    <a href="/map.html"><span class="icon">🗺️</span><span class="text">Mapa</span></a>
   </div>
+
 </div>
 
+<!-- 🔥 CONTENT -->
 <div class="content">
 
 <div class="panel">
@@ -48,6 +54,12 @@
 </div>
 
 <script>
+// 🔥 sidebar toggle
+function toggle(){
+  document.getElementById("sidebar").classList.toggle("collapsed");
+}
+
+// 🔥 tabela
 let data=[];
 let sortKey="points";
 let asc=false;
