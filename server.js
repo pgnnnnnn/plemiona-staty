@@ -1,10 +1,11 @@
 const express = require("express");
 const axios = require("axios");
+const cheerio = require("cheerio");
 
 const app = express();
 const PORT = 3000;
 
-// API
+// 🔥 GŁÓWNE DANE
 app.get("/api/data/:world", async (req, res) => {
     try {
         const world = req.params.world;
@@ -34,6 +35,36 @@ app.get("/api/data/:world", async (req, res) => {
 
     } catch {
         res.json({players:[], villages:[], conquers:[]});
+    }
+});
+
+
+// 🔥 GUEST (oficjalny ranking)
+app.get("/api/guest/:world", async (req,res)=>{
+    try{
+        const world = req.params.world;
+
+        const html = await axios.get(`https://${world}.plemiona.pl/guest.php`);
+        const $ = cheerio.load(html.data);
+
+        const tribes = [];
+
+        $("table tr").each((i,row)=>{
+            const cols = $(row).find("td");
+
+            if(cols.length >= 4){
+                tribes.push({
+                    name: $(cols[1]).text().trim(),
+                    points: $(cols[2]).text().trim(),
+                    members: $(cols[3]).text().trim()
+                });
+            }
+        });
+
+        res.json({tribes});
+
+    }catch{
+        res.json({tribes:[]});
     }
 });
 
