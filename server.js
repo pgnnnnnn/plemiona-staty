@@ -33,32 +33,49 @@ db.run(`CREATE TABLE IF NOT EXISTS players (
 
 // Funkcja fetch plemion
 async function fetchTribes() {
-  const url = "https://pl.twstats.com/pl224/index.php?page=achievements&display=tranking";
-  const { data } = await axios.get(url);
-  const $ = cheerio.load(data);
-  const now = new Date().toISOString();
+  try {
+    const url = "https://pl.twstats.com/pl224/index.php?page=achievements&display=tranking";
 
-  const rows = $("table tr");
+    const { data } = await axios.get(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
 
-  rows.each((i, el) => {
-    const tds = $(el).find("td");
+    const $ = cheerio.load(data);
+    const now = new Date().toISOString();
 
-    if (tds.length >= 5) {
-      const rank = parseInt($(tds[0]).text().trim());
-      const name = $(tds[1]).text().trim();
-      const points = parseInt($(tds[2]).text().replace(/\D/g,"")) || 0;
-      const villages = parseInt($(tds[3]).text().replace(/\D/g,"")) || 0;
-      const members = parseInt($(tds[4]).text().replace(/\D/g,"")) || 0;
+    const rows = $("table tr");
 
-      if (!rank || !name) return;
+    let count = 0;
 
-      db.run(`
-        INSERT OR REPLACE INTO tribes (rank,name,points,villages,members,last_update)
-        VALUES (?, ?, ?, ?, ?, ?)`,
-        [rank,name,points,villages,members,now]
-      );
-    }
-  });
+    rows.each((i, el) => {
+      const tds = $(el).find("td");
+
+      if (tds.length >= 5) {
+        const rank = parseInt($(tds[0]).text().trim());
+        const name = $(tds[1]).text().trim();
+        const points = parseInt($(tds[2]).text().replace(/\D/g,"")) || 0;
+        const villages = parseInt($(tds[3]).text().replace(/\D/g,"")) || 0;
+        const members = parseInt($(tds[4]).text().replace(/\D/g,"")) || 0;
+
+        if (!rank || !name) return;
+
+        db.run(`
+          INSERT OR REPLACE INTO tribes (rank,name,points,villages,members,last_update)
+          VALUES (?, ?, ?, ?, ?, ?)`,
+          [rank,name,points,villages,members,now]
+        );
+
+        count++;
+      }
+    });
+
+    console.log("Pobrano plemion:", count);
+
+  } catch (err) {
+    console.error("BŁĄD fetchTribes:", err.message);
+  }
 }
 
 // Funkcja fetch graczy
