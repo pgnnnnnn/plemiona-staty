@@ -1,6 +1,5 @@
 const tribeColors = {};
 let villagesData = [];
-let playersMap = {};
 let historyFiles = [];
 let replayIndex = 0;
 let playing = false;
@@ -11,11 +10,6 @@ function getColor(t) {
     }
     return tribeColors[t];
 }
-
-// PLAYERS
-fetch("/api/players").then(r=>r.json()).then(players=>{
-    players.forEach(p=>playersMap[p.id]=p);
-});
 
 // TRIBES
 fetch("/api/tribes").then(r=>r.json()).then(data=>{
@@ -35,7 +29,12 @@ fetch("/api/tribes").then(r=>r.json()).then(data=>{
     });
 });
 
-// HISTORY
+// villages
+fetch("/api/villages").then(r=>r.json()).then(v=>{
+    villagesData = v;
+});
+
+// history
 fetch("/api/history").then(r=>r.json()).then(files=>{
     historyFiles = files.sort();
 
@@ -77,11 +76,6 @@ let offsetY = 0;
 let isDragging = false;
 let lastX, lastY;
 
-fetch("/api/villages").then(r=>r.json()).then(v=>{
-    villagesData = v;
-});
-
-// DRAW
 function drawMap(topTribes) {
     ctx.fillStyle="black";
     ctx.fillRect(0,0,800,800);
