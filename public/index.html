@@ -2,80 +2,19 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Mapa Świata 224 z Legendą</title>
-<style>
-  html, body {
-    margin:0;
-    padding:0;
-    height:100%;
-    background:#111;
-    display:flex;
-    flex-direction:column;
-  }
-  #mapContainer {
-    flex:1;
-    position:relative;
-  }
-  iframe {
-    width:100%;
-    height:100%;
-    border:none;
-  }
-  #legend {
-    background:#1a1a1a;
-    color:white;
-    padding:10px;
-    font-family:Arial,sans-serif;
-  }
-  #legend h2 {
-    margin:0 0 5px 0;
-    font-size:16px;
-  }
-  #legend ul {
-    list-style:none;
-    padding:0;
-    margin:0;
-    display:flex;
-    flex-wrap:wrap;
-  }
-  #legend li {
-    margin-right:15px;
-    display:flex;
-    align-items:center;
-  }
-  .colorBox {
-    width:20px;
-    height:20px;
-    margin-right:5px;
-    border:1px solid #444;
-  }
-</style>
+<title>Statystyki 224</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="mapContainer">
-  <iframe id="mapFrame" src="https://pl224.tribalwarsmap.com/pl/69bc0daa3ffb1"></iframe>
-</div>
+<div class="container panel">
+<h1>Statystyki świata 224</h1>
 
-<div id="legend">
-  <h2>Legenda plemion:</h2>
-  <ul>
-    <li><div class="colorBox" style="background:#ff0000"></div> AK!</li>
-    <li><div class="colorBox" style="background:#00ff00"></div> CHŁ</li>
-    <li><div class="colorBox" style="background:#0000ff"></div> XYZ</li>
-    <li><div class="colorBox" style="background:#ffff00"></div> AAA</li>
-    <li><div class="colorBox" style="background:#ff00ff"></div> BBB</li>
-    <!-- Dodaj kolejne plemiona i kolory zgodnie z mapą -->
-  </ul>
-</div>
+<p><a href="/tribes.html">Ranking plemion</a></p>
+<p><a href="/players.html">Ranking graczy</a></p>
+<p><a href="/map.html">Mapa świata</a></p>
 
-<script>
-  // Automatyczne odświeżanie mapy co 5 minut (300000 ms)
-  setInterval(() => {
-    const iframe = document.getElementById("mapFrame");
-    iframe.src = iframe.src;
-  }, 300000);
-</script>
+</div>
 
 </body>
 </html>
