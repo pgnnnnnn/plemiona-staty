@@ -58,7 +58,7 @@ body {
   display:none;
 }
 
-/* 🔥 TOOLTIP */
+/* TOOLTIP */
 .menu a::after {
   content:attr(data-tip);
   position:absolute;
@@ -95,10 +95,9 @@ body {
   padding:20px;
 }
 
-/* BACK BUTTON */
+/* BACK */
 .back {
   margin-bottom:15px;
-  display:inline-block;
   cursor:pointer;
   color:#aaa;
 }
