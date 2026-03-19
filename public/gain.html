@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Przyrosty</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="nav">
+  <div class="logo">STATY 224</div>
+  <div>
+    <a href="/">Home</a>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="panel">
+
+<h1>Ranking przyrostów</h1>
+
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Plemie</th>
+<th>Przyrost</th>
+<th>Punkty</th>
+</tr>
+</thead>
+
+<tbody id="t"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script>
+async function load(){
+  const res = await fetch("/api/gain");
+  const data = await res.json();
+
+  let i = 1;
+
+  document.getElementById("t").innerHTML =
+  data.map(x=>`
+    <tr onclick="go(${x.id})">
+      <td>${i++}</td>
+      <td>${x.tag}</td>
+      <td style="color:#4cff4c">+${x.gain}</td>
+      <td>${x.points}</td>
+    </tr>
+  `).join("");
+}
+
+function go(id){
+  location.href="/tribe.html?id="+id;
+}
+
+load();
+</script>
+
+</body>
+</html>
