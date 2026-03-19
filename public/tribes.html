@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
 <meta charset="UTF-8">
 <title>Plemiona</title>
@@ -9,7 +9,7 @@
 
 <div class="container panel">
 
-<h1>Plemiona</h1>
+<h1>Ranking plemion</h1>
 
 <input id="search" placeholder="Szukaj plemienia...">
 
@@ -39,13 +39,21 @@ async function init(){
 
 document.getElementById("search").addEventListener("input", render);
 
+function normalize(text){
+  return (text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 function render(){
-  const q = document.getElementById("search").value.toLowerCase();
+  const q = normalize(document.getElementById("search").value);
 
   let i=1;
 
   document.getElementById("t").innerHTML =
-  data.filter(x=> (x.tag||"").toLowerCase().includes(q))
+  data
+  .filter(x=> normalize(x.tag).includes(q))
   .slice(0,200)
   .map(x=>`
   <tr>
