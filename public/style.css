@@ -1,138 +1,25 @@
 body {
-  margin:0;
-  background:#0c0c0c;
-  color:#e5e5e5;
-  font-family:Segoe UI, Arial;
+    font-family: Arial;
+    background: #111;
+    color: white;
+    text-align: center;
 }
 
-.layout {
-  display:flex;
-}
-
-/* SIDEBAR */
-.sidebar {
-  width:220px;
-  background:#111;
-  min-height:100vh;
-  border-right:1px solid #1f1f1f;
-  padding:20px 15px;
-  transition:0.3s;
-}
-
-.sidebar.collapsed {
-  width:70px;
-}
-
-.logo {
-  font-size:18px;
-  margin-bottom:20px;
-}
-
-.menu a {
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:10px;
-  margin-bottom:5px;
-  color:#aaa;
-  text-decoration:none;
-  border-radius:6px;
-  position:relative;
-}
-
-.menu a:hover {
-  background:#1f1f1f;
-  color:#fff;
-}
-
-.active {
-  background:#222;
-  color:#fff !important;
-}
-
-.icon {
-  font-size:18px;
-}
-
-.sidebar.collapsed .text {
-  display:none;
-}
-
-/* TOOLTIP */
-.menu a::after {
-  content:attr(data-tip);
-  position:absolute;
-  left:70px;
-  background:#222;
-  padding:5px 8px;
-  border-radius:5px;
-  font-size:12px;
-  opacity:0;
-  pointer-events:none;
-  transition:0.2s;
-}
-
-.sidebar.collapsed .menu a:hover::after {
-  opacity:1;
-}
-
-/* TOGGLE */
-.toggle {
-  cursor:pointer;
-  margin-bottom:20px;
-  font-size:20px;
-}
-
-/* CONTENT */
-.content {
-  flex:1;
-  padding:25px;
-}
-
-.panel {
-  background:#151515;
-  border-radius:12px;
-  padding:20px;
-}
-
-/* BACK */
-.back {
-  margin-bottom:15px;
-  cursor:pointer;
-  color:#aaa;
-}
-
-.back:hover {
-  color:#fff;
-}
-
-/* TABLE */
 table {
-  width:100%;
-  border-collapse:collapse;
+    margin: 20px auto;
+    border-collapse: collapse;
+    width: 80%;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #444;
 }
 
 th {
-  padding:12px;
-  color:#888;
-  cursor:pointer;
+    background: #222;
 }
 
-td {
-  padding:10px;
-  border-bottom:1px solid #1a1a1a;
-}
-
-tr:hover {
-  background:#1f1f1f;
-}
-
-/* INPUT */
-input {
-  width:100%;
-  padding:10px;
-  margin-bottom:15px;
-  background:#1f1f1f;
-  border:none;
-  color:#fff;
+tr:nth-child(even) {
+    background: #1a1a1a;
 }
