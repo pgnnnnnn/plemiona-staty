@@ -9,9 +9,9 @@
 
 <div class="container panel">
 
-<h1>Gracze</h1>
+<h1>Ranking graczy</h1>
 
-<input id="search" placeholder="Szukaj...">
+<input id="search" placeholder="Szukaj gracza...">
 
 <table>
 <thead>
@@ -20,6 +20,7 @@
 <th>Nick</th>
 <th>Punkty</th>
 <th>Wioski</th>
+<th>Plemie</th>
 </tr>
 </thead>
 <tbody id="t"></tbody>
@@ -44,15 +45,18 @@ function render(){
   let i=1;
 
   document.getElementById("t").innerHTML =
-  data.filter(x => (x.name||"").toLowerCase().includes(q))
+  data
+  .filter(x => (x.name||"").toLowerCase().includes(q))
   .slice(0,300)
   .map(x=>`
-  <tr>
-    <td>${i++}</td>
-    <td>${x.name}</td>
-    <td>${x.points}</td>
-    <td>${x.villages}</td>
-  </tr>`).join("");
+    <tr>
+      <td>${i++}</td>
+      <td>${x.name}</td>
+      <td>${x.points}</td>
+      <td>${x.villages}</td>
+      <td>${x.tribe}</td>
+    </tr>
+  `).join("");
 }
 
 init();
