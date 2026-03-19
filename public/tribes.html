@@ -7,15 +7,28 @@
 </head>
 <body>
 
-<div class="nav">
-  <div class="logo">STATY 224</div>
+<div class="layout">
+
+<div class="sidebar" id="sidebar">
+  <div class="toggle" onclick="toggle()">☰</div>
+  <div class="logo">STATY</div>
+
+  <div class="menu">
+    <a href="/" data-tip="Dashboard">🏠 <span class="text">Dashboard</span></a>
+    <a href="/players.html" data-tip="Gracze">👤 <span class="text">Gracze</span></a>
+    <a href="/tribes.html" class="active" data-tip="Plemiona">⚔️ <span class="text">Plemiona</span></a>
+  </div>
 </div>
 
-<div class="container panel">
+<div class="content">
 
-<h1>Ranking plemion</h1>
+<div class="panel">
 
-<input id="search" placeholder="Szukaj plemienia...">
+<div class="back" onclick="history.back()">← Powrót</div>
+
+<h1>Plemiona</h1>
+
+<input id="search" placeholder="Szukaj...">
 
 <table>
 <thead>
@@ -32,7 +45,25 @@
 
 </div>
 
+</div>
+
+</div>
+
 <script>
+// sidebar
+function toggle(){
+  const s=document.getElementById("sidebar");
+  s.classList.toggle("collapsed");
+  localStorage.setItem("sidebar", s.classList.contains("collapsed"));
+}
+
+window.onload=()=>{
+  if(localStorage.getItem("sidebar")==="true"){
+    document.getElementById("sidebar").classList.add("collapsed");
+  }
+};
+
+// tabela
 let data=[];
 let sortKey="points";
 let asc=false;
@@ -43,13 +74,8 @@ async function init(){
   render();
 }
 
-function sortBy(key){
-  if(sortKey===key){
-    asc=!asc;
-  } else {
-    sortKey=key;
-    asc=false;
-  }
+function sortBy(k){
+  if(sortKey===k){ asc=!asc; } else { sortKey=k; asc=false; }
   render();
 }
 
@@ -70,25 +96,18 @@ function render(){
   let i=1;
 
   document.getElementById("t").innerHTML =
-  list.slice(0,200).map(x=>{
-    let cls="";
-    if(i===1) cls="gold";
-    if(i===2) cls="silver";
-    if(i===3) cls="bronze";
-
-    return `
-    <tr class="${cls}" onclick="openTribe(${x.id})">
-      <td>${i}</td>
+  list.slice(0,200).map(x=>`
+    <tr onclick="go(${x.id})">
+      <td>${i++}</td>
       <td style="color:${x.color}">${x.tag}</td>
       <td>${x.points}</td>
       <td>${x.villages}</td>
       <td>${x.members}</td>
-    </tr>`;
-    i++;
-  }).join("");
+    </tr>
+  `).join("");
 }
 
-function openTribe(id){
+function go(id){
   location.href="/tribe.html?id="+id;
 }
 
