@@ -57,6 +57,15 @@ setInterval(updateData, 1000 * 60 * 5);
 // STATIC
 app.use(express.static(path.join(__dirname, "public")));
 
+// 🔥 API GRACZA
+app.get("/api/player/:id", (req,res)=>{
+  const id = req.params.id;
+
+  const player = players.find(p => p.id == id);
+
+  res.json(player || {});
+});
+
 // API LISTA
 app.get("/api/tribes", (req, res) => {
   res.json(tribes.sort((a,b)=>b.points-a.points));
