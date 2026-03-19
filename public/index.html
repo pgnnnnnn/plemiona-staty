@@ -35,6 +35,12 @@
 .green { color:#2ecc71; }
 .red { color:#e74c3c; }
 .yellow { color:#f1c40f; }
+
+.header-bar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
 </style>
 
 </head>
@@ -42,6 +48,7 @@
 
 <div class="layout">
 
+<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
   <div class="toggle" onclick="toggle()">☰</div>
   <div class="logo">STATY</div>
@@ -53,14 +60,18 @@
   </div>
 </div>
 
+<!-- CONTENT -->
 <div class="content">
 
 <div class="panel">
 
-<h1>Dashboard PRO</h1>
-
-<div id="timer" class="timer"></div>
-<div class="refresh" onclick="manualRefresh()">↻ Odśwież teraz</div>
+<div class="header-bar">
+  <h1>Ranking Rodzin</h1>
+  <div>
+    <div id="timer" class="timer"></div>
+    <div class="refresh" onclick="manualRefresh()">↻ Odśwież</div>
+  </div>
+</div>
 
 <table class="big-table">
 <thead>
@@ -71,7 +82,8 @@
 <th>Gracze</th>
 <th>Wioski</th>
 <th>Śr / gracz</th>
-<th>Agresor (TWStats)</th>
+<th>ODA</th>
+<th>Δ Punkty</th>
 </tr>
 </thead>
 <tbody id="t"></tbody>
@@ -84,7 +96,7 @@
 </div>
 
 <script>
-// sidebar
+// SIDEBAR
 function toggle(){
   const s=document.getElementById("sidebar");
   s.classList.toggle("collapsed");
@@ -103,10 +115,10 @@ let data=[];
 async function init(){
   const res=await fetch("/api/tribes");
   data=await res.json();
-
   render();
 }
 
+// RENDER
 function render(){
   let i=1;
 
@@ -114,6 +126,9 @@ function render(){
   data.sort((a,b)=>b.points-a.points).map(x=>{
 
     const avg = Math.round(x.points / (x.members || 1));
+
+    // 🔥 placeholder pod przyrost (można podmienić później)
+    const gain = Math.floor(Math.random()*500000);
 
     return `
     <tr>
@@ -123,25 +138,29 @@ function render(){
       <td>${x.members}</td>
       <td>${x.villages}</td>
       <td>${avg.toLocaleString()}</td>
-      <td class="yellow">—</td>
+      <td class="green">${x.aggro.toLocaleString()}</td>
+      <td class="yellow">+${gain.toLocaleString()}</td>
     </tr>
     `;
   }).join("");
 }
 
-// LIVE
+// TIMER
 let refreshTime=300;
 let current=refreshTime;
 
 function startTimer(){
   setInterval(()=>{
     current--;
-    document.getElementById("timer").innerText="Odświeżanie za: "+current+"s";
+
+    document.getElementById("timer").innerText =
+      "Odświeżanie za: "+current+"s";
 
     if(current<=0){
       current=refreshTime;
       init();
     }
+
   },1000);
 }
 
@@ -150,7 +169,7 @@ function manualRefresh(){
   init();
 }
 
-// start
+// START
 init();
 startTimer();
 </script>
