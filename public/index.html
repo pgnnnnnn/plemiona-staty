@@ -6,41 +6,13 @@
 <link rel="stylesheet" href="style.css">
 
 <style>
-.big-table {
-  width:100%;
-  border-collapse:collapse;
-  margin-top:20px;
-}
-
-.big-table th {
-  background:#1f1f1f;
-  padding:10px;
-  font-size:12px;
-}
-
-.big-table td {
-  padding:8px;
-  border-bottom:1px solid #1a1a1a;
-  text-align:center;
-}
-
-.big-table tr:hover {
-  background:#222;
-}
-
-.tag {
-  font-weight:bold;
-}
+.big-table { width:100%; border-collapse:collapse; }
+.big-table th { background:#1f1f1f; padding:10px; font-size:12px; }
+.big-table td { padding:8px; border-bottom:1px solid #1a1a1a; text-align:center; }
+.big-table tr:hover { background:#222; }
 
 .green { color:#2ecc71; }
 .red { color:#e74c3c; }
-.yellow { color:#f1c40f; }
-
-.header-bar {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
 </style>
 
 </head>
@@ -48,30 +20,16 @@
 
 <div class="layout">
 
-<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
   <div class="toggle" onclick="toggle()">☰</div>
   <div class="logo">STATY</div>
-
-  <div class="menu">
-    <a href="/" class="active">🏠 <span class="text">Dashboard</span></a>
-    <a href="/players.html">👤 <span class="text">Gracze</span></a>
-    <a href="/tribes.html">⚔️ <span class="text">Plemiona</span></a>
-  </div>
 </div>
 
-<!-- CONTENT -->
 <div class="content">
 
 <div class="panel">
 
-<div class="header-bar">
-  <h1>Ranking Rodzin</h1>
-  <div>
-    <div id="timer" class="timer"></div>
-    <div class="refresh" onclick="manualRefresh()">↻ Odśwież</div>
-  </div>
-</div>
+<h1>Ranking Rodzin</h1>
 
 <table class="big-table">
 <thead>
@@ -79,11 +37,9 @@
 <th>#</th>
 <th>Plemie</th>
 <th>Punkty</th>
-<th>Gracze</th>
-<th>Wioski</th>
-<th>Śr / gracz</th>
-<th>ODA</th>
 <th>Δ Punkty</th>
+<th>Wioski</th>
+<th>Δ Wioski</th>
 </tr>
 </thead>
 <tbody id="t"></tbody>
@@ -96,82 +52,34 @@
 </div>
 
 <script>
-// SIDEBAR
 function toggle(){
-  const s=document.getElementById("sidebar");
-  s.classList.toggle("collapsed");
-  localStorage.setItem("sidebar", s.classList.contains("collapsed"));
+  document.getElementById("sidebar").classList.toggle("collapsed");
 }
 
-window.onload=()=>{
-  if(localStorage.getItem("sidebar")==="true"){
-    document.getElementById("sidebar").classList.add("collapsed");
-  }
-};
+async function load(){
+  const res = await fetch("/api/dashboard");
+  const data = await res.json();
 
-// DATA
-let data=[];
-
-async function init(){
-  const res=await fetch("/api/tribes");
-  data=await res.json();
-  render();
-}
-
-// RENDER
-function render(){
   let i=1;
 
   document.getElementById("t").innerHTML =
-  data.sort((a,b)=>b.points-a.points).map(x=>{
-
-    const avg = Math.round(x.points / (x.members || 1));
-
-    // 🔥 placeholder pod przyrost (można podmienić później)
-    const gain = Math.floor(Math.random()*500000);
-
-    return `
+  data.map(x=>`
     <tr>
       <td>${i++}</td>
-      <td class="tag" style="color:${x.color}">${x.tag}</td>
+      <td style="color:${x.color}">${x.tag}</td>
       <td>${x.points.toLocaleString()}</td>
-      <td>${x.members}</td>
+      <td class="${x.gain.points>=0?'green':'red'}">
+        ${x.gain.points>=0?'+':''}${x.gain.points.toLocaleString()}
+      </td>
       <td>${x.villages}</td>
-      <td>${avg.toLocaleString()}</td>
-      <td class="green">${x.aggro.toLocaleString()}</td>
-      <td class="yellow">+${gain.toLocaleString()}</td>
+      <td class="${x.gain.villages>=0?'green':'red'}">
+        ${x.gain.villages>=0?'+':''}${x.gain.villages}
+      </td>
     </tr>
-    `;
-  }).join("");
+  `).join("");
 }
 
-// TIMER
-let refreshTime=300;
-let current=refreshTime;
-
-function startTimer(){
-  setInterval(()=>{
-    current--;
-
-    document.getElementById("timer").innerText =
-      "Odświeżanie za: "+current+"s";
-
-    if(current<=0){
-      current=refreshTime;
-      init();
-    }
-
-  },1000);
-}
-
-function manualRefresh(){
-  current=refreshTime;
-  init();
-}
-
-// START
-init();
-startTimer();
+load();
 </script>
 
 </body>
