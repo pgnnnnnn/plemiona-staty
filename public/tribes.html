@@ -1,19 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
-<title>Top 25 Plemion</title>
+<meta charset="UTF-8">
+<title>Plemiona</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Top 25 Plemion</h1>
+<div class="container panel">
+
+<h1>Plemiona</h1>
 <button onclick="update()">Aktualizuj</button>
 
-<table>
+<table id="t">
 <thead>
 <tr>
 <th>#</th>
-<th>Plemie</th>
+<th>Nazwa</th>
 <th>Punkty</th>
 <th>Wioski</th>
 <th>Członkowie</th>
@@ -22,27 +25,25 @@
 <tbody></tbody>
 </table>
 
+</div>
+
 <script>
 async function load(){
-  const res = await fetch("/api/tribes");
-  const data = await res.json();
-  const tbody = document.querySelector("tbody");
-  tbody.innerHTML = "";
+  const r = await fetch("/api/tribes");
+  const d = await r.json();
 
-  data.forEach((t, index)=>{
-    let color = "";
-    if(index === 0) color = "gold";
-    else if(index === 1) color = "silver";
-    else if(index === 2) color = "orange";
+  const tbody = document.querySelector("#t tbody");
+  tbody.innerHTML="";
 
+  d.forEach(x=>{
     tbody.innerHTML += `
-      <tr style="background-color:${color};">
-        <td>${index+1}</td>
-        <td>${t.name}</td>
-        <td>${t.points}</td>
-        <td>${t.villages}</td>
-        <td>${t.members}</td>
-      </tr>`;
+    <tr>
+    <td>${x.rank}</td>
+    <td>${x.name}</td>
+    <td>${x.points}</td>
+    <td>${x.villages}</td>
+    <td>${x.members}</td>
+    </tr>`;
   });
 }
 
