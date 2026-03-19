@@ -20,10 +20,6 @@
 
     <input type="range" id="slider">
     <span id="dateLabel"></span>
-
-    <input id="searchInput" placeholder="🔍 gracz">
-    <button id="resetView">Reset</button>
-    <button id="heatmapBtn">🔥</button>
 </div>
 
 <div class="card">
@@ -31,14 +27,33 @@
     <div id="dateGrid" class="date-grid"></div>
 </div>
 
-<div class="card">
-    <h3>📈 Wzrost świata</h3>
-    <canvas id="chart"></canvas>
+<div class="grid">
+
+    <div class="card">
+        <h3>📊 Top plemiona (punkty)</h3>
+        <canvas id="tribeChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h3>📈 Przyrost plemion (delta)</h3>
+        <canvas id="growthChart"></canvas>
+    </div>
+
 </div>
 
 <div class="card">
-    <h3>🏰 Plemiona w czasie</h3>
-    <canvas id="tribeChart"></canvas>
+    <h3>🏰 Ranking plemion</h3>
+    <table id="tribeTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Plemię</th>
+                <th>Punkty</th>
+                <th>Gracze</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
 </div>
 
 <div class="card">
