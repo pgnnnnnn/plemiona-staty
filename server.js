@@ -31,8 +31,11 @@ db.serialize(() => {
 
 // --- FETCH PLEMION ---
 async function fetchTribes() {
-  const res = await axios.get("https://pl224.plemiona.pl/map/ally.txt");
-  const lines = res.data.split("\n");
+  const res = await axios.get("https://pl224.plemiona.pl/map/ally.txt", {
+    responseType: "arraybuffer"
+  });
+  const data = res.data.toString("utf-8");
+  const lines = data.split("\n");
 
   db.run("DELETE FROM tribes");
 
@@ -43,7 +46,7 @@ async function fetchTribes() {
     db.run(
       `INSERT INTO tribes (rank,name,points,villages,members)
        VALUES (?, ?, ?, ?, ?)`,
-      [rank, tag, points, villages, members]
+      [rank, tag.replace(/%/g,""), points.replace(/%/g,""), villages.replace(/%/g,""), members.replace(/%/g,"")]
     );
     rank++;
   });
@@ -51,8 +54,11 @@ async function fetchTribes() {
 
 // --- FETCH GRACZY ---
 async function fetchPlayers() {
-  const res = await axios.get("https://pl224.plemiona.pl/map/player.txt");
-  const lines = res.data.split("\n");
+  const res = await axios.get("https://pl224.plemiona.pl/map/player.txt", {
+    responseType: "arraybuffer"
+  });
+  const data = res.data.toString("utf-8");
+  const lines = data.split("\n");
 
   db.run("DELETE FROM players");
 
@@ -63,7 +69,7 @@ async function fetchPlayers() {
     db.run(
       `INSERT INTO players (rank,name,points,villages)
        VALUES (?, ?, ?, ?)`,
-      [rank, name, points, villages]
+      [rank, name.replace(/%/g,""), points.replace(/%/g,""), villages.replace(/%/g,"")]
     );
     rank++;
   });
