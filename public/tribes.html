@@ -31,13 +31,10 @@
 async function load(){
   const r = await fetch("/api/tribes");
   const d = await r.json();
-
-  const tbody = document.querySelector("#t tbody");
-  tbody.innerHTML="";
-
+  const t = document.querySelector("#t tbody");
+  t.innerHTML="";
   d.forEach(x=>{
-    tbody.innerHTML += `
-    <tr>
+    t.innerHTML += `<tr>
     <td>${x.rank}</td>
     <td>${x.name}</td>
     <td>${x.points}</td>
@@ -46,12 +43,10 @@ async function load(){
     </tr>`;
   });
 }
-
 async function update(){
   await fetch("/update");
   load();
 }
-
 load();
 </script>
 
