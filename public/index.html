@@ -9,11 +9,13 @@
 .big-table {
   width:100%;
   border-collapse:collapse;
+  margin-top:20px;
 }
 
 .big-table th {
   background:#1f1f1f;
   padding:10px;
+  font-size:12px;
 }
 
 .big-table td {
@@ -25,6 +27,14 @@
 .big-table tr:hover {
   background:#222;
 }
+
+.tag {
+  font-weight:bold;
+}
+
+.green { color:#2ecc71; }
+.red { color:#e74c3c; }
+.yellow { color:#f1c40f; }
 </style>
 
 </head>
@@ -37,9 +47,9 @@
   <div class="logo">STATY</div>
 
   <div class="menu">
-    <a href="/" class="active">🏠 Dashboard</a>
-    <a href="/players.html">👤 Gracze</a>
-    <a href="/tribes.html">⚔️ Plemiona</a>
+    <a href="/" class="active">🏠 <span class="text">Dashboard</span></a>
+    <a href="/players.html">👤 <span class="text">Gracze</span></a>
+    <a href="/tribes.html">⚔️ <span class="text">Plemiona</span></a>
   </div>
 </div>
 
@@ -49,8 +59,8 @@
 
 <h1>Dashboard PRO</h1>
 
-<div id="timer"></div>
-<div onclick="manualRefresh()">↻ Odśwież teraz</div>
+<div id="timer" class="timer"></div>
+<div class="refresh" onclick="manualRefresh()">↻ Odśwież teraz</div>
 
 <table class="big-table">
 <thead>
@@ -60,7 +70,8 @@
 <th>Punkty</th>
 <th>Gracze</th>
 <th>Wioski</th>
-<th>ODA</th>
+<th>Śr / gracz</th>
+<th>Agresor (TWStats)</th>
 </tr>
 </thead>
 <tbody id="t"></tbody>
@@ -73,6 +84,7 @@
 </div>
 
 <script>
+// sidebar
 function toggle(){
   const s=document.getElementById("sidebar");
   s.classList.toggle("collapsed");
@@ -85,11 +97,13 @@ window.onload=()=>{
   }
 };
 
+// DATA
 let data=[];
 
 async function init(){
   const res=await fetch("/api/tribes");
   data=await res.json();
+
   render();
 }
 
@@ -97,19 +111,25 @@ function render(){
   let i=1;
 
   document.getElementById("t").innerHTML =
-  data.map(x=>`
+  data.sort((a,b)=>b.points-a.points).map(x=>{
+
+    const avg = Math.round(x.points / (x.members || 1));
+
+    return `
     <tr>
       <td>${i++}</td>
-      <td>${x.tag}</td>
+      <td class="tag" style="color:${x.color}">${x.tag}</td>
       <td>${x.points.toLocaleString()}</td>
       <td>${x.members}</td>
       <td>${x.villages}</td>
-      <td>${x.oda.toLocaleString()}</td>
+      <td>${avg.toLocaleString()}</td>
+      <td class="yellow">—</td>
     </tr>
-  `).join("");
+    `;
+  }).join("");
 }
 
-// TIMER
+// LIVE
 let refreshTime=300;
 let current=refreshTime;
 
@@ -130,6 +150,7 @@ function manualRefresh(){
   init();
 }
 
+// start
 init();
 startTimer();
 </script>
