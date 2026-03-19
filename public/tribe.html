@@ -1,17 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
 <meta charset="UTF-8">
 <title>Plemie</title>
 <link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
 <div class="container panel">
 
 <h1 id="name"></h1>
-<canvas id="chart"></canvas>
+
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Nick</th>
+<th>Punkty</th>
+<th>Wioski</th>
+</tr>
+</thead>
+<tbody id="t"></tbody>
+</table>
 
 </div>
 
@@ -23,19 +33,20 @@ async function load(){
   const data=await res.json();
 
   if(data.length){
-    document.getElementById("name").innerText=data[0].tribe;
+    document.getElementById("name").innerText="Plemie: "+data[0].tribe;
   }
 
-  const labels=data.map((_,i)=>i);
-  const points=data.map(x=>x.points);
+  let i=1;
 
-  new Chart(document.getElementById("chart"),{
-    type:"line",
-    data:{
-      labels:labels,
-      datasets:[{data:points}]
-    }
-  });
+  document.getElementById("t").innerHTML =
+  data.map(x=>`
+    <tr>
+      <td>${i++}</td>
+      <td>${x.name}</td>
+      <td>${x.points}</td>
+      <td>${x.villages}</td>
+    </tr>
+  `).join("");
 }
 
 load();
