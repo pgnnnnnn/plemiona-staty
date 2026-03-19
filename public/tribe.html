@@ -28,6 +28,9 @@
 
 <h1 id="name"></h1>
 
+<div id="timer" class="timer"></div>
+<div class="refresh" onclick="manualRefresh()">↻ Odśwież teraz</div>
+
 <input id="search" placeholder="Szukaj gracza...">
 
 <table>
@@ -62,7 +65,6 @@ window.onload=()=>{
   }
 };
 
-// dane
 const id=new URLSearchParams(location.search).get("id");
 
 let data=[];
@@ -81,7 +83,7 @@ async function init(){
 }
 
 function sortBy(k){
-  if(sortKey===k){ asc=!asc; } else { sortKey=k; asc=false; }
+  if(sortKey===k){asc=!asc;} else {sortKey=k;asc=false;}
   render();
 }
 
@@ -94,14 +96,14 @@ function render(){
   .filter(x=>x.name.toLowerCase().includes(q))
   .sort((a,b)=>{
     if(sortKey==="name"){
-      return asc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+      return asc?a.name.localeCompare(b.name):b.name.localeCompare(a.name);
     }
-    return asc ? a[sortKey]-b[sortKey] : b[sortKey]-a[sortKey];
+    return asc?a[sortKey]-b[sortKey]:b[sortKey]-a[sortKey];
   });
 
   let i=1;
 
-  document.getElementById("t").innerHTML =
+  document.getElementById("t").innerHTML=
   list.map(x=>`
     <tr>
       <td>${i++}</td>
@@ -112,7 +114,29 @@ function render(){
   `).join("");
 }
 
+// live
+let refreshTime=300;
+let current=refreshTime;
+
+function startTimer(){
+  setInterval(()=>{
+    current--;
+    document.getElementById("timer").innerText="Odświeżanie za: "+current+"s";
+
+    if(current<=0){
+      current=refreshTime;
+      init();
+    }
+  },1000);
+}
+
+function manualRefresh(){
+  current=refreshTime;
+  init();
+}
+
 init();
+startTimer();
 </script>
 
 </body>
