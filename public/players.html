@@ -28,6 +28,9 @@
 
 <h1>Gracze</h1>
 
+<div id="timer" class="timer"></div>
+<div class="refresh" onclick="manualRefresh()">↻ Odśwież teraz</div>
+
 <input id="search" placeholder="Szukaj...">
 
 <table>
@@ -50,6 +53,7 @@
 </div>
 
 <script>
+// sidebar
 function toggle(){
   const s=document.getElementById("sidebar");
   s.classList.toggle("collapsed");
@@ -73,7 +77,7 @@ async function init(){
 }
 
 function sortBy(k){
-  if(sortKey===k){ asc=!asc; } else { sortKey=k; asc=false; }
+  if(sortKey===k){asc=!asc;} else {sortKey=k;asc=false;}
   render();
 }
 
@@ -86,14 +90,14 @@ function render(){
   .filter(x=>x.name.toLowerCase().includes(q)||(x.tribe||"").toLowerCase().includes(q))
   .sort((a,b)=>{
     if(sortKey==="name"||sortKey==="tribe"){
-      return asc ? a[sortKey].localeCompare(b[sortKey]) : b[sortKey].localeCompare(a[sortKey]);
+      return asc?a[sortKey].localeCompare(b[sortKey]):b[sortKey].localeCompare(a[sortKey]);
     }
-    return asc ? a[sortKey]-b[sortKey] : b[sortKey]-a[sortKey];
+    return asc?a[sortKey]-b[sortKey]:b[sortKey]-a[sortKey];
   });
 
   let i=1;
 
-  document.getElementById("t").innerHTML =
+  document.getElementById("t").innerHTML=
   list.slice(0,300).map(x=>`
     <tr>
       <td>${i++}</td>
@@ -109,7 +113,29 @@ function go(id){
   location.href="/tribe.html?id="+id;
 }
 
+// live
+let refreshTime=300;
+let current=refreshTime;
+
+function startTimer(){
+  setInterval(()=>{
+    current--;
+    document.getElementById("timer").innerText="Odświeżanie za: "+current+"s";
+
+    if(current<=0){
+      current=refreshTime;
+      init();
+    }
+  },1000);
+}
+
+function manualRefresh(){
+  current=refreshTime;
+  init();
+}
+
 init();
+startTimer();
 </script>
 
 </body>
