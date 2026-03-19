@@ -4,58 +4,29 @@
 <meta charset="UTF-8">
 <title>Plemie</title>
 <link rel="stylesheet" href="style.css">
-
-<style>
-.breadcrumb {
-  margin-bottom:15px;
-  color:#888;
-}
-
-.breadcrumb a {
-  color:#aaa;
-  text-decoration:none;
-}
-
-.breadcrumb a:hover {
-  color:#fff;
-}
-
-.header-box {
-  background:#1a1a1a;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:20px;
-  display:flex;
-  justify-content:space-between;
-  flex-wrap:wrap;
-}
-
-.stat {
-  margin-right:20px;
-}
-</style>
-
 </head>
 <body>
 
-<div class="nav">
-  <div class="logo">STATY 224</div>
+<div class="layout">
+
+<div class="sidebar" id="sidebar">
+  <div class="toggle" onclick="toggle()">☰</div>
+  <div class="logo">STATY</div>
+
+  <div class="menu">
+    <a href="/" data-tip="Dashboard">🏠 <span class="text">Dashboard</span></a>
+    <a href="/players.html" data-tip="Gracze">👤 <span class="text">Gracze</span></a>
+    <a href="/tribes.html" class="active" data-tip="Plemiona">⚔️ <span class="text">Plemiona</span></a>
+  </div>
 </div>
 
-<div class="container panel">
+<div class="content">
 
-<!-- 🔥 BREADCRUMB -->
-<div class="breadcrumb">
-  <a href="/tribes.html">Plemiona</a> → <span id="crumb"></span>
-</div>
+<div class="panel">
 
-<!-- 🔥 HEADER -->
-<div class="header-box">
-  <div class="stat"><b id="tag"></b></div>
-  <div class="stat">Punkty: <b id="points"></b></div>
-  <div class="stat">Wioski: <b id="villages"></b></div>
-  <div class="stat">Członkowie: <b id="members"></b></div>
-</div>
+<div class="back" onclick="history.back()">← Powrót</div>
+
+<h1 id="name"></h1>
 
 <input id="search" placeholder="Szukaj gracza...">
 
@@ -73,65 +44,62 @@
 
 </div>
 
+</div>
+
+</div>
+
 <script>
-const id = new URLSearchParams(location.search).get("id");
+// sidebar
+function toggle(){
+  const s=document.getElementById("sidebar");
+  s.classList.toggle("collapsed");
+  localStorage.setItem("sidebar", s.classList.contains("collapsed"));
+}
 
-let data = [];
-let sortKey = "points";
-let asc = false;
+window.onload=()=>{
+  if(localStorage.getItem("sidebar")==="true"){
+    document.getElementById("sidebar").classList.add("collapsed");
+  }
+};
 
-// 🔥 pobieramy plemiona (żeby mieć stats)
-let allTribes = [];
+// dane
+const id=new URLSearchParams(location.search).get("id");
+
+let data=[];
+let sortKey="points";
+let asc=false;
 
 async function init(){
-  const [playersRes, tribesRes] = await Promise.all([
-    fetch("/api/tribe/" + id),
-    fetch("/api/tribes")
-  ]);
+  const res=await fetch("/api/tribe/"+id);
+  data=await res.json();
 
-  data = await playersRes.json();
-  allTribes = await tribesRes.json();
-
-  const tribe = allTribes.find(t => t.id == id);
-
-  if(tribe){
-    document.getElementById("tag").innerText = tribe.tag;
-    document.getElementById("points").innerText = tribe.points;
-    document.getElementById("villages").innerText = tribe.villages;
-    document.getElementById("members").innerText = tribe.members;
-    document.getElementById("crumb").innerText = tribe.tag;
+  if(data.length){
+    document.getElementById("name").innerText="Plemie: "+data[0].tribe;
   }
 
   render();
 }
 
-function sortBy(key){
-  if(sortKey === key){
-    asc = !asc;
-  } else {
-    sortKey = key;
-    asc = false;
-  }
+function sortBy(k){
+  if(sortKey===k){ asc=!asc; } else { sortKey=k; asc=false; }
   render();
 }
 
 document.getElementById("search").addEventListener("input", render);
 
 function render(){
-  const q = document.getElementById("search").value.toLowerCase();
+  const q=document.getElementById("search").value.toLowerCase();
 
-  let list = [...data]
-    .filter(x => x.name.toLowerCase().includes(q))
-    .sort((a,b)=>{
-      if(sortKey==="name"){
-        return asc
-          ? a.name.localeCompare(b.name)
-          : b.name.localeCompare(a.name);
-      }
-      return asc ? a[sortKey]-b[sortKey] : b[sortKey]-a[sortKey];
-    });
+  let list=[...data]
+  .filter(x=>x.name.toLowerCase().includes(q))
+  .sort((a,b)=>{
+    if(sortKey==="name"){
+      return asc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+    }
+    return asc ? a[sortKey]-b[sortKey] : b[sortKey]-a[sortKey];
+  });
 
-  let i = 1;
+  let i=1;
 
   document.getElementById("t").innerHTML =
   list.map(x=>`
