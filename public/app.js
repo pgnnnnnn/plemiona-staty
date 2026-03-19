@@ -1,11 +1,10 @@
 let currentWorld="pl224";
 let villagesData=[];
-let playersData=[];
 let historyFiles=[];
 let replayIndex=0;
-let playing=false;
 
-let chart, tribeChart;
+let tribeChart, growthChart;
+let lastMap={};
 
 const tribeColors={};
 
@@ -16,21 +15,17 @@ function getColor(t){
     return tribeColors[t];
 }
 
-// WORLD
+// LOAD WORLD
 document.getElementById("worldSelect").onchange=e=>{
     currentWorld=e.target.value;
     loadWorld();
 };
 
-// LOAD WORLD
 async function loadWorld(){
     const data=await fetch(`/api/world/${currentWorld}`).then(r=>r.json());
-    playersData=data.players;
     villagesData=data.villages;
 
     loadHistory();
-    loadChart();
-    loadTribeChart();
 }
 
 // HISTORY
@@ -38,10 +33,7 @@ async function loadHistory(){
     historyFiles=await fetch(`/api/history/${currentWorld}`).then(r=>r.json());
     historyFiles.sort();
 
-    const slider=document.getElementById("slider");
-    slider.max=historyFiles.length-1;
-
-    const grid = document.getElementById("dateGrid");
+    const grid=document.getElementById("dateGrid");
     grid.innerHTML="";
 
     historyFiles.forEach((d,i)=>{
@@ -51,17 +43,11 @@ async function loadHistory(){
 
         btn.onclick=()=>{
             replayIndex=i;
-            slider.value=i;
             loadReplay();
         };
 
         grid.appendChild(btn);
     });
-
-    slider.oninput=()=>{
-        replayIndex=slider.value;
-        loadReplay();
-    };
 
     loadReplay();
 }
@@ -75,141 +61,111 @@ async function loadReplay(){
 
     const players=await fetch(`/api/history/${currentWorld}/${date}`).then(r=>r.json());
 
-    players.sort((a,b)=>b.points-a.points);
+    const tribes={};
 
-    const topTribes={};
-    players.slice(0,15).forEach(p=>topTribes[p.tribe]=true);
+    players.forEach(p=>{
+        if(!tribes[p.tribe]){
+            tribes[p.tribe]={points:0,members:0};
+        }
+        tribes[p.tribe].points+=p.points;
+        tribes[p.tribe].members++;
+    });
 
-    drawMap(topTribes);
+    drawMap(players);
+    loadTribeTable(tribes);
+    loadCharts();
 
     document.querySelectorAll(".date-btn").forEach((b,i)=>{
-        b.classList.toggle("active", i == replayIndex);
+        b.classList.toggle("active", i==replayIndex);
     });
 }
 
-// MAPA PRO (cluster)
-const canvas=document.getElementById("map");
-const ctx=canvas.getContext("2d");
-
-canvas.width=800;
-canvas.height=800;
-
-let scale=2, offsetX=0, offsetY=0;
-
-function drawMap(topTribes){
-    ctx.fillStyle="black";
-    ctx.fillRect(0,0,800,800);
+// MAPA (ANIMACJA)
+function drawMap(players){
 
     const gridSize=20;
+    const newMap={};
     const grid={};
 
-    villagesData.forEach(v=>{
-        if(!topTribes[v.tribe]) return;
+    players.forEach(p=>{
+        villagesData
+            .filter(v=>v.player==p.id)
+            .forEach(v=>{
+                const gx=Math.floor(v.x/gridSize);
+                const gy=Math.floor(v.y/gridSize);
+                const key=gx+"_"+gy;
 
-        const gx=Math.floor(v.x/gridSize);
-        const gy=Math.floor(v.y/gridSize);
-        const key=gx+"_"+gy;
-
-        if(!grid[key]) grid[key]={};
-        if(!grid[key][v.tribe]) grid[key][v.tribe]=0;
-        grid[key][v.tribe]++;
+                if(!grid[key]) grid[key]={};
+                if(!grid[key][p.tribe]) grid[key][p.tribe]=0;
+                grid[key][p.tribe]++;
+            });
     });
 
     Object.keys(grid).forEach(key=>{
-        const [gx,gy]=key.split("_");
-        const tribes=grid[key];
+        let maxT=null,max=0;
 
-        let maxT=null, max=0;
-
-        for(let t in tribes){
-            if(tribes[t]>max){
-                max=tribes[t];
+        for(let t in grid[key]){
+            if(grid[key][t]>max){
+                max=grid[key][t];
                 maxT=t;
             }
         }
 
-        ctx.fillStyle=getColor(maxT);
-
-        ctx.fillRect(
-            gx*gridSize/scale+offsetX,
-            gy*gridSize/scale+offsetY,
-            gridSize/scale,
-            gridSize/scale
-        );
+        newMap[key]=maxT;
     });
 
-    // LEGENDA
-    const legend=document.getElementById("legend");
-    legend.innerHTML="";
+    const canvas=document.getElementById("map");
+    const ctx=canvas.getContext("2d");
 
-    Object.keys(topTribes).slice(0,10).forEach(t=>{
-        const el=document.createElement("span");
+    canvas.width=800;
+    canvas.height=800;
 
-        el.innerHTML=`
-        <span style="
-            display:inline-block;
-            width:10px;
-            height:10px;
-            background:${getColor(t)};
-            margin-right:5px;"></span>${t}
+    ctx.fillStyle="black";
+    ctx.fillRect(0,0,800,800);
+
+    Object.keys(newMap).forEach(key=>{
+        const [gx,gy]=key.split("_");
+
+        const oldT=lastMap[key];
+        const newT=newMap[key];
+
+        ctx.fillStyle=(oldT && oldT!==newT) ? "yellow" : getColor(newT);
+
+        ctx.fillRect(gx*20,gy*20,20,20);
+    });
+
+    lastMap=newMap;
+}
+
+// TABELA
+function loadTribeTable(tribes){
+    const sorted=Object.entries(tribes)
+        .sort((a,b)=>b[1].points-a[1].points);
+
+    const tbody=document.querySelector("#tribeTable tbody");
+    tbody.innerHTML="";
+
+    sorted.slice(0,15).forEach(([t,d],i)=>{
+        const tr=document.createElement("tr");
+
+        tr.innerHTML=`
+            <td>${i+1}</td>
+            <td style="color:${getColor(t)}">${t}</td>
+            <td>${d.points.toLocaleString()}</td>
+            <td>${d.members}</td>
         `;
 
-        el.style.marginRight="10px";
-
-        legend.appendChild(el);
+        tbody.appendChild(tr);
     });
 }
 
-// PLAY
-document.getElementById("playBtn").onclick=()=>{
-    playing=!playing;
-    if(playing) play();
-};
+// 📊 WYKRESY REALNE
+async function loadCharts(){
 
-function play(){
-    if(!playing) return;
+    const files=historyFiles;
 
-    replayIndex=(replayIndex+1)%historyFiles.length;
-    document.getElementById("slider").value=replayIndex;
-
-    loadReplay();
-
-    setTimeout(play,800);
-}
-
-// EXPORT
-document.getElementById("exportBtn").onclick=()=>{
-    const link=document.createElement("a");
-    link.download="map.png";
-    link.href=canvas.toDataURL();
-    link.click();
-};
-
-// WYKRES ŚWIATA
-async function loadChart(){
-    const files=await fetch(`/api/history/${currentWorld}`).then(r=>r.json());
-
-    const labels=[],values=[];
-
-    for(let f of files){
-        const data=await fetch(`/api/history/${currentWorld}/${f}`).then(r=>r.json());
-        labels.push(f);
-        values.push(data.reduce((s,p)=>s+p.points,0));
-    }
-
-    if(chart) chart.destroy();
-
-    chart=new Chart(document.getElementById("chart"),{
-        type:"line",
-        data:{labels,datasets:[{label:"Punkty świata",data:values}]}
-    });
-}
-
-// WYKRES PLEMION
-async function loadTribeChart(){
-    const files=await fetch(`/api/history/${currentWorld}`).then(r=>r.json());
-
-    const tribeData={};
+    const tribeSeries={};
+    const growthSeries={};
 
     for(let f of files){
         const data=await fetch(`/api/history/${currentWorld}/${f}`).then(r=>r.json());
@@ -221,20 +177,20 @@ async function loadTribeChart(){
             tribes[p.tribe]+=p.points;
         });
 
-        Object.entries(tribes)
-            .sort((a,b)=>b[1]-a[1])
-            .slice(0,5)
-            .forEach(([t,points])=>{
-                if(!tribeData[t]) tribeData[t]=[];
-                tribeData[t].push(points);
-            });
+        Object.entries(tribes).forEach(([t,points])=>{
+            if(!tribeSeries[t]) tribeSeries[t]=[];
+            tribeSeries[t].push(points);
+        });
     }
 
-    const datasets=Object.keys(tribeData).map(t=>({
+    const topTribes=Object.entries(tribeSeries)
+        .sort((a,b)=>b[1].slice(-1)[0]-a[1].slice(-1)[0])
+        .slice(0,5);
+
+    const datasets=topTribes.map(([t,data])=>({
         label:t,
-        data:tribeData[t],
-        borderColor:getColor(t),
-        fill:false
+        data,
+        borderColor:getColor(t)
     }));
 
     if(tribeChart) tribeChart.destroy();
@@ -242,6 +198,19 @@ async function loadTribeChart(){
     tribeChart=new Chart(document.getElementById("tribeChart"),{
         type:"line",
         data:{labels:files,datasets}
+    });
+
+    // delta
+    const growthDatasets=topTribes.map(([t,data])=>{
+        const diff=data.map((v,i)=> i? v-data[i-1]:0);
+        return {label:t,data:diff,borderColor:getColor(t)};
+    });
+
+    if(growthChart) growthChart.destroy();
+
+    growthChart=new Chart(document.getElementById("growthChart"),{
+        type:"line",
+        data:{labels:files,datasets:growthDatasets}
     });
 }
 
