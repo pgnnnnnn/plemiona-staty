@@ -1,46 +1,53 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Ranking Graczy</title>
+<title>Gracze</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <h1>Ranking Graczy</h1>
-<button onclick="update()">Aktualizuj ręcznie</button>
-<table id="players">
-  <thead>
-    <tr>
-      <th>Rank</th>
-      <th>Gracz</th>
-      <th>Punkty</th>
-      <th>Wioski</th>
-      <th>Plemie</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
+<button onclick="update()">Aktualizuj</button>
+
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Gracz</th>
+<th>Punkty</th>
+<th>Wioski</th>
+<th>Plemie</th>
+</tr>
+</thead>
+<tbody></tbody>
 </table>
+
 <script>
-async function loadPlayers(){
+async function load(){
   const res = await fetch("/api/players");
   const data = await res.json();
-  const tbody = document.querySelector("#players tbody");
+  const tbody = document.querySelector("tbody");
   tbody.innerHTML = "";
+
   data.forEach(p=>{
-    tbody.innerHTML += `<tr>
-      <td>${p.rank}</td>
-      <td>${p.name}</td>
-      <td>${p.points}</td>
-      <td>${p.villages}</td>
-      <td>${p.tribe}</td>
-    </tr>`;
+    tbody.innerHTML += `
+      <tr>
+        <td>${p.rank}</td>
+        <td>${p.name}</td>
+        <td>${p.points}</td>
+        <td>${p.villages}</td>
+        <td>${p.tribe}</td>
+      </tr>`;
   });
 }
+
 async function update(){
   await fetch("/update");
-  await loadPlayers();
+  load();
 }
-loadPlayers();
+
+load();
 </script>
+
 </body>
 </html>
