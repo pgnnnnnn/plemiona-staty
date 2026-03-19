@@ -1,16 +1,91 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Świat 224 Statystyki</title>
+<title>Statystyki Świata 224</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<h1>Witaj w statystykach świata 224</h1>
-<ul>
-  <li><a href="/tribes.html">Ranking Plemion</a></li>
-  <li><a href="/players.html">Ranking Graczy</a></li>
-  <li><a href="/map.html">Mapa</a></li>
-</ul>
+
+<h1>Świat 224 — Statystyki</h1>
+<button onclick="update()">Aktualizuj Wszystko</button>
+
+<h2>Top 25 Plemion</h2>
+<table id="tribes-table">
+<thead>
+<tr>
+<th>#</th>
+<th>Plemie</th>
+<th>Punkty</th>
+<th>Wioski</th>
+<th>Członkowie</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<h2>Top 25 Graczy</h2>
+<table id="players-table">
+<thead>
+<tr>
+<th>#</th>
+<th>Gracz</th>
+<th>Punkty</th>
+<th>Wioski</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<script>
+async function loadTribes(){
+  const res = await fetch("/api/tribes");
+  const data = await res.json();
+  const tbody = document.querySelector("#tribes-table tbody");
+  tbody.innerHTML = "";
+
+  data.forEach((t, index)=>{
+    let color = "";
+    if(index===0) color="gold";
+    else if(index===1) color="silver";
+    else if(index===2) color="orange";
+
+    tbody.innerHTML += `
+      <tr style="background-color:${color};">
+        <td>${index+1}</td>
+        <td>${t.name}</td>
+        <td>${t.points}</td>
+        <td>${t.villages}</td>
+        <td>${t.members}</td>
+      </tr>`;
+  });
+}
+
+async function loadPlayers(){
+  const res = await fetch("/api/players");
+  const data = await res.json();
+  const tbody = document.querySelector("#players-table tbody");
+  tbody.innerHTML = "";
+
+  data.forEach((p, index)=>{
+    tbody.innerHTML += `
+      <tr>
+        <td>${index+1}</td>
+        <td>${p.name}</td>
+        <td>${p.points}</td>
+        <td>${p.villages}</td>
+      </tr>`;
+  });
+}
+
+async function update(){
+  await fetch("/update");
+  await loadTribes();
+  await loadPlayers();
+}
+
+loadTribes();
+loadPlayers();
+</script>
+
 </body>
 </html>
