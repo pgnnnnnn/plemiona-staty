@@ -4,6 +4,37 @@
 <meta charset="UTF-8">
 <title>Plemie</title>
 <link rel="stylesheet" href="style.css">
+
+<style>
+.breadcrumb {
+  margin-bottom:15px;
+  color:#888;
+}
+
+.breadcrumb a {
+  color:#aaa;
+  text-decoration:none;
+}
+
+.breadcrumb a:hover {
+  color:#fff;
+}
+
+.header-box {
+  background:#1a1a1a;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:20px;
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+
+.stat {
+  margin-right:20px;
+}
+</style>
+
 </head>
 <body>
 
@@ -13,7 +44,18 @@
 
 <div class="container panel">
 
-<h1 id="name"></h1>
+<!-- 🔥 BREADCRUMB -->
+<div class="breadcrumb">
+  <a href="/tribes.html">Plemiona</a> → <span id="crumb"></span>
+</div>
+
+<!-- 🔥 HEADER -->
+<div class="header-box">
+  <div class="stat"><b id="tag"></b></div>
+  <div class="stat">Punkty: <b id="points"></b></div>
+  <div class="stat">Wioski: <b id="villages"></b></div>
+  <div class="stat">Członkowie: <b id="members"></b></div>
+</div>
 
 <input id="search" placeholder="Szukaj gracza...">
 
@@ -38,12 +80,26 @@ let data = [];
 let sortKey = "points";
 let asc = false;
 
-async function init(){
-  const res = await fetch("/api/tribe/" + id);
-  data = await res.json();
+// 🔥 pobieramy plemiona (żeby mieć stats)
+let allTribes = [];
 
-  if(data.length){
-    document.getElementById("name").innerText = "Plemie: " + data[0].tribe;
+async function init(){
+  const [playersRes, tribesRes] = await Promise.all([
+    fetch("/api/tribe/" + id),
+    fetch("/api/tribes")
+  ]);
+
+  data = await playersRes.json();
+  allTribes = await tribesRes.json();
+
+  const tribe = allTribes.find(t => t.id == id);
+
+  if(tribe){
+    document.getElementById("tag").innerText = tribe.tag;
+    document.getElementById("points").innerText = tribe.points;
+    document.getElementById("villages").innerText = tribe.villages;
+    document.getElementById("members").innerText = tribe.members;
+    document.getElementById("crumb").innerText = tribe.tag;
   }
 
   render();
