@@ -1,30 +1,51 @@
 const express = require("express");
 const axios = require("axios");
-const cheerio = require("cheerio");
 const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 let tribes = [];
-let tribeStats = {};
+let players = [];
 
-// 🔥 UTF FIX
+// 🎨 ROZSZERZONE KOLORY PLEMION (możesz dopisywać kolejne)
+const tribeColors = {
+  "AMA":"#ff8000",
+  "AMA!":"#ff8000",
+  "AMA$":"#ff8000",
+  "AMA.":"#ff8000",
+
+  "FF":"#00e5ff",
+  "FF.":"#00e5ff",
+  "FF..":"#00e5ff",
+  "FF:":"#00e5ff",
+
+  "AK":"#0033ff",
+  "AK!":"#0033ff",
+  "AK!!":"#0033ff",
+  "AK!!!":"#0033ff",
+
+  "OB!":"#ff0000",
+  "OB":"#ff0000",
+  "OB?":"#ff0000",
+
+};
+
+// UTF
 async function getUTF(url){
   const res = await axios.get(url,{responseType:"arraybuffer"});
   return Buffer.from(res.data,"binary").toString("utf8");
 }
 
-// 🔥 MAPA
+// LOAD
 async function loadMap(){
   try{
-    const raw = await getUTF("https://pl224.plemiona.pl/map/ally.txt");
+    const ally = await getUTF("https://pl224.plemiona.pl/map/ally.txt");
 
-    tribes = raw.split("\n").map(line=>{
+    tribes = ally.split("\n").map(line=>{
       const [id,name,tag,members,villages,points] = line.split(",");
 
-      const cleanTag = decodeURIComponent((tag||"").replace(/\+/g," "))
-        .replace(/[^A-Z]/g,"");
+      const cleanTag = decodeURIComponent((tag||"").replace(/\+/g," "));
 
       return {
         id,
@@ -32,76 +53,49 @@ async function loadMap(){
         members:+members||0,
         villages:+villages||0,
         points:+points||0,
-        color:"#888"
+        color: tribeColors[cleanTag] || "#888"
+      };
+    });
+
+    const player = await getUTF("https://pl224.plemiona.pl/map/player.txt");
+
+    players = player.split("\n").map(line=>{
+      const [id,name,tribe,villages,points] = line.split(",");
+
+      const t = tribes.find(x=>x.id==tribe);
+
+      return {
+        id,
+        name: decodeURIComponent((name||"").replace(/\+/g," ")),
+        tribeId: tribe,
+        tribe: t ? t.tag : "",
+        color: t ? t.color : "#999",
+        villages:+villages||0,
+        points:+points||0
       };
     });
 
     console.log("MAP OK");
   }catch(e){
-    console.log("MAP ERR:", e.message);
+    console.log("ERR:",e.message);
   }
 }
 
-// 🔥 TWSTATS (ODA)
-async function loadTW(){
-  try{
-    const res = await axios.get(
-      "https://pl.twstats.com/pl224/index.php?page=ranking&type=oda",
-      {
-        headers:{
-          "User-Agent":"Mozilla/5.0",
-          "Accept-Language":"pl-PL"
-        }
-      }
-    );
-
-    const $ = cheerio.load(res.data);
-
-    tribeStats = {};
-
-    $("table tr").each((i,row)=>{
-      const cols = $(row).find("td");
-
-      if(cols.length > 3){
-        let tag = $(cols[1]).text().trim();
-
-        tag = tag.replace(/[^A-Z]/g,"");
-
-        const oda = $(cols[2]).text().replace(/\./g,"");
-
-        tribeStats[tag] = {
-          oda: parseInt(oda) || 0
-        };
-      }
-    });
-
-    console.log("TWSTATS OK");
-  }catch(e){
-    console.log("TWSTATS ERR:", e.message);
-  }
-}
-
-// START
 loadMap();
-loadTW();
-
 setInterval(loadMap,1000*60*5);
-setInterval(loadTW,1000*60*5);
 
-// STATIC
 app.use(express.static(path.join(__dirname,"public")));
 
-// API
 app.get("/api/tribes",(req,res)=>{
-  const merged = tribes.map(t=>{
-    const stat = tribeStats[t.tag] || {};
-    return {
-      ...t,
-      oda: stat.oda || 0
-    };
-  });
+  res.json(tribes);
+});
 
-  res.json(merged.sort((a,b)=>b.points-a.points));
+app.get("/api/players",(req,res)=>{
+  res.json(players);
+});
+
+app.get("/api/tribe/:id",(req,res)=>{
+  res.json(players.filter(p=>p.tribeId==req.params.id));
 });
 
 app.listen(PORT,()=>console.log("Server działa"));
