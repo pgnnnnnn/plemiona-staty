@@ -1,6 +1,5 @@
 const express = require("express");
 const axios = require("axios");
-const fs = require("fs");
 const path = require("path");
 
 const app = express();
@@ -9,52 +8,69 @@ const PORT = process.env.PORT || 3000;
 let tribes = [];
 let players = [];
 
-// 🔄 LOAD + SAVE JSON
+// 🔥 KLUCZ: pobieranie jako UTF-8
+async function getUTF(url){
+  const res = await axios.get(url, {
+    responseType: "arraybuffer"
+  });
+
+  return Buffer.from(res.data, "binary").toString("utf8");
+}
+
+// 🔄 LOAD MAP
 async function loadMap(){
   try{
-    const ally = await axios.get("https://pl224.plemiona.pl/map/ally.txt");
+    // PLEMIONA
+    const allyData = await getUTF("https://pl224.plemiona.pl/map/ally.txt");
 
-    tribes = ally.data.split("\n").map(line=>{
+    tribes = allyData.split("\n").map(line=>{
       const [id,name,tag,members,villages,points] = line.split(",");
 
       return {
         id,
-        name,
-        tag,
+        name: name || "",
+        tag: tag || "",
         members: +members || 0,
         villages: +villages || 0,
         points: +points || 0
       };
     });
 
-    const player = await axios.get("https://pl224.plemiona.pl/map/player.txt");
+    // GRACZE
+    const playerData = await getUTF("https://pl224.plemiona.pl/map/player.txt");
 
-    players = player.data.split("\n").map(line=>{
+    players = playerData.split("\n").map(line=>{
       const [id,name,tribe,villages,points] = line.split(",");
 
       return {
         id,
-        name,
+        name: name || "",
         tribe,
         villages: +villages || 0,
         points: +points || 0
       };
     });
 
-    // 🔥 zapis do pliku jak mikamait
-    fs.writeFileSync("public/tribes.json", JSON.stringify(tribes));
-    fs.writeFileSync("public/players.json", JSON.stringify(players));
-
-    console.log("ZAPIS OK");
+    console.log("MAP OK");
   }catch(e){
-    console.log("ERR:", e.message);
+    console.log("MAP ERR:", e.message);
   }
 }
 
+// START
 loadMap();
 setInterval(loadMap, 1000 * 60 * 5);
 
 // STATIC
 app.use(express.static(path.join(__dirname,"public")));
+
+// API
+app.get("/api/tribes",(req,res)=>{
+  res.json(tribes.sort((a,b)=>b.points-a.points));
+});
+
+app.get("/api/players",(req,res)=>{
+  res.json(players.sort((a,b)=>b.points-a.points));
+});
 
 app.listen(PORT,()=>console.log("Server działa"));
