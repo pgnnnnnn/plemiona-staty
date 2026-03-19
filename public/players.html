@@ -81,9 +81,15 @@ function render(){
       <td>${x.name}</td>
       <td>${x.points}</td>
       <td>${x.villages}</td>
-      <td style="color:${x.color}">${x.tribe}</td>
+      <td onclick="openTribe('${x.tribeId}')" style="color:${x.color};cursor:pointer">
+        ${x.tribe}
+      </td>
     </tr>
   `).join("");
+}
+
+function openTribe(id){
+  location.href="/tribe.html?id="+id;
 }
 
 init();
