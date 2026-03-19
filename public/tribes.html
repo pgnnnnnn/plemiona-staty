@@ -9,7 +9,7 @@
 
 <div class="container panel">
 
-<h1>Ranking plemion</h1>
+<h1>Plemiona</h1>
 
 <input id="search" placeholder="Szukaj...">
 
@@ -32,11 +32,8 @@
 let data=[];
 
 async function init(){
-  const res = await fetch("/tribes.json");
+  const res = await fetch("/api/tribes");
   data = await res.json();
-
-  data.sort((a,b)=>b.points-a.points);
-
   render();
 }
 
