@@ -1,8 +1,19 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Staty PRO MAX</title>
+<link rel="stylesheet" href="style.css">
+</head>
 <body>
 
-<h1>🔥 Staty PRO MAX</h1>
+<h1>🔥 Staty PL224 PRO MAX</h1>
 
-<select id="dateSelect"></select>
+<div class="replay">
+    <button id="playBtn">▶️ Play</button>
+    <input type="range" id="slider" min="0" max="0" value="0">
+    <span id="dateLabel"></span>
+</div>
 
 <div class="container">
     <div class="table-box">
@@ -17,6 +28,11 @@
             </thead>
             <tbody></tbody>
         </table>
+
+        <h2>🏰 Ranking plemion</h2>
+        <table id="tribeTable">
+            <tbody></tbody>
+        </table>
     </div>
 
     <div class="map-box">
@@ -26,3 +42,4 @@
 
 <script src="app.js"></script>
 </body>
+</html>
