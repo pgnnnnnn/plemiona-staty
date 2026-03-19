@@ -44,9 +44,15 @@ async function fetchTribes() {
   try {
     const url = "https://pl.twstats.com/pl224/index.php?page=achievements&display=tranking";
 
-    const res = await axios.get(url, {
-      headers: { "User-Agent": "Mozilla/5.0" }
-    });
+  const res = await axios.get(url, {
+  headers: {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    "Accept": "text/html,application/xhtml+xml",
+    "Accept-Language": "pl-PL,pl;q=0.9",
+    "Connection": "keep-alive",
+    "Referer": "https://pl.twstats.com/"
+  }
+});
 
     const $ = cheerio.load(res.data);
     const now = new Date().toISOString();
