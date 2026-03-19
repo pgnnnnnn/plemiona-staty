@@ -7,20 +7,11 @@
 </head>
 <body>
 
-<div class="nav">
-  <div class="logo">STATY 224</div>
-  <div>
-    <a href="/">Home</a>
-  </div>
-</div>
+<div class="container panel">
 
-<div class="container">
+<h1>Gracze</h1>
 
-<div class="panel">
-
-<h1>Ranking graczy</h1>
-
-<input class="search" id="search" placeholder="Szukaj..." onkeyup="render()">
+<input id="search" placeholder="Szukaj gracza...">
 
 <table>
 <thead>
@@ -32,17 +23,13 @@
 <th>Plemie</th>
 </tr>
 </thead>
-
 <tbody id="t"></tbody>
-
 </table>
 
 </div>
 
-</div>
-
 <script>
-let data = [];
+let data=[];
 
 async function init(){
   const res = await fetch("/api/players");
@@ -50,27 +37,24 @@ async function init(){
   render();
 }
 
+document.getElementById("search").addEventListener("input", render);
+
 function render(){
   const q = document.getElementById("search").value.toLowerCase();
-  let i = 1;
+
+  let i=1;
 
   document.getElementById("t").innerHTML =
-  data
-  .filter(x => x.name.toLowerCase().includes(q))
+  data.filter(x=> (x.name||"").toLowerCase().includes(q))
   .slice(0,300)
   .map(x=>`
-    <tr onclick="go(${x.id})">
-      <td>${i++}</td>
-      <td>${x.name}</td>
-      <td>${x.points}</td>
-      <td>${x.villages}</td>
-      <td>${x.tribe}</td>
-    </tr>
-  `).join("");
-}
-
-function go(id){
-  location.href = "/player.html?id=" + id;
+  <tr>
+    <td>${i++}</td>
+    <td>${x.name}</td>
+    <td>${x.points}</td>
+    <td>${x.villages}</td>
+    <td>${x.tribe}</td>
+  </tr>`).join("");
 }
 
 init();
