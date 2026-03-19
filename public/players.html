@@ -7,6 +7,10 @@
 </head>
 <body>
 
+<div class="nav">
+  <div class="logo">STATY 224</div>
+</div>
+
 <div class="container panel">
 
 <h1>Ranking graczy</h1>
@@ -16,7 +20,7 @@
 <table>
 <thead>
 <tr>
-<th onclick="sortBy('rank')">#</th>
+<th onclick="sortBy('points')">#</th>
 <th onclick="sortBy('name')">Nick</th>
 <th onclick="sortBy('points')">Punkty</th>
 <th onclick="sortBy('villages')">Wioski</th>
@@ -42,7 +46,7 @@ async function init(){
 function sortBy(key){
   if(sortKey===key){
     asc=!asc;
-  }else{
+  } else {
     sortKey=key;
     asc=false;
   }
