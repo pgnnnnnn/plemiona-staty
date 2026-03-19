@@ -8,17 +8,23 @@ const PORT = process.env.PORT || 3000;
 let tribes = [];
 let players = [];
 
-// 🔥 RĘCZNE KOLORY (jak mapa — możesz zmieniać)
+// 🎨 KOLORY Z MAPY (dopasowane do Twojego screena)
 const tribeColors = {
-  "VIP":"#ff0000",
-  "VIP2":"#ff3333",
-  "ZD":"#00ff22",
-  "KMIC":"#1100ff",
-  "R":"#ff6a00",
-  "FER":"#55499c"
+  "AMA":"#ff9900",
+  "FF":"#00e5ff",
+  "AK":"#0033ff",
+  "AKII":"#0000cc",
+  "AFMA":"#ff9900",
+  "OF":"#00ccff",
+  "OB":"#ff0000",
+  "OBJ":"#ff0000",
+  "AMA!":"#00e5ff",
+  "AMAS":"#ff9900",
+  "AK!":"#0000ff",
+  "AK!!!":"#0000cc"
 };
 
-// UTF
+// UTF FIX
 async function getUTF(url){
   const res = await axios.get(url,{responseType:"arraybuffer"});
   return Buffer.from(res.data,"binary").toString("utf8");
@@ -74,14 +80,13 @@ setInterval(loadMap,1000*60*5);
 app.use(express.static(path.join(__dirname,"public")));
 
 app.get("/api/tribes",(req,res)=>{
-  res.json(tribes.sort((a,b)=>b.points-a.points));
+  res.json(tribes);
 });
 
 app.get("/api/players",(req,res)=>{
-  res.json(players.sort((a,b)=>b.points-a.points));
+  res.json(players);
 });
 
-// 🔥 członkowie plemienia
 app.get("/api/tribe/:id",(req,res)=>{
   res.json(players.filter(p=>p.tribeId==req.params.id));
 });
