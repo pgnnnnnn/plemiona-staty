@@ -4,6 +4,39 @@
 <meta charset="UTF-8">
 <title>Dashboard</title>
 <link rel="stylesheet" href="style.css">
+
+<style>
+.big-table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+}
+
+.big-table th {
+  background:#1f1f1f;
+  padding:10px;
+  font-size:12px;
+}
+
+.big-table td {
+  padding:8px;
+  border-bottom:1px solid #1a1a1a;
+  text-align:center;
+}
+
+.big-table tr:hover {
+  background:#222;
+}
+
+.tag {
+  font-weight:bold;
+}
+
+.green { color:#2ecc71; }
+.red { color:#e74c3c; }
+.yellow { color:#f1c40f; }
+</style>
+
 </head>
 <body>
 
@@ -14,9 +47,9 @@
   <div class="logo">STATY</div>
 
   <div class="menu">
-    <a href="/" class="active" data-tip="Dashboard">🏠 <span class="text">Dashboard</span></a>
-    <a href="/players.html" data-tip="Gracze">👤 <span class="text">Gracze</span></a>
-    <a href="/tribes.html" data-tip="Plemiona">⚔️ <span class="text">Plemiona</span></a>
+    <a href="/" class="active">🏠 <span class="text">Dashboard</span></a>
+    <a href="/players.html">👤 <span class="text">Gracze</span></a>
+    <a href="/tribes.html">⚔️ <span class="text">Plemiona</span></a>
   </div>
 </div>
 
@@ -24,12 +57,25 @@
 
 <div class="panel">
 
-<h1>Dashboard</h1>
+<h1>Dashboard PRO</h1>
 
 <div id="timer" class="timer"></div>
 <div class="refresh" onclick="manualRefresh()">↻ Odśwież teraz</div>
 
-<div id="stats"></div>
+<table class="big-table">
+<thead>
+<tr>
+<th>#</th>
+<th>Plemie</th>
+<th>Punkty</th>
+<th>Gracze</th>
+<th>Wioski</th>
+<th>Śr / gracz</th>
+<th>Agresor (TWStats)</th>
+</tr>
+</thead>
+<tbody id="t"></tbody>
+</table>
 
 </div>
 
@@ -51,57 +97,57 @@ window.onload=()=>{
   }
 };
 
-// data
+// DATA
+let data=[];
+
 async function init(){
-  const [p,t]=await Promise.all([
-    fetch("/api/players"),
-    fetch("/api/tribes")
-  ]);
+  const res=await fetch("/api/tribes");
+  data=await res.json();
 
-  const players=await p.json();
-  const tribes=await t.json();
-
-  document.getElementById("stats").innerHTML=`
-    Gracze: ${players.length}<br>
-    Plemiona: ${tribes.length}
-  `;
+  render();
 }
 
-// 🔥 LIVE UPDATE
+function render(){
+  let i=1;
+
+  document.getElementById("t").innerHTML =
+  data.sort((a,b)=>b.points-a.points).map(x=>{
+
+    const avg = Math.round(x.points / (x.members || 1));
+
+    return `
+    <tr>
+      <td>${i++}</td>
+      <td class="tag" style="color:${x.color}">${x.tag}</td>
+      <td>${x.points.toLocaleString()}</td>
+      <td>${x.members}</td>
+      <td>${x.villages}</td>
+      <td>${avg.toLocaleString()}</td>
+      <td class="yellow">—</td>
+    </tr>
+    `;
+  }).join("");
+}
+
+// LIVE
 let refreshTime=300;
 let current=refreshTime;
-let timerInterval;
 
 function startTimer(){
-  clearInterval(timerInterval);
-  timerInterval=setInterval(()=>{
+  setInterval(()=>{
     current--;
     document.getElementById("timer").innerText="Odświeżanie za: "+current+"s";
 
     if(current<=0){
       current=refreshTime;
-      reloadData();
-      showRefresh();
+      init();
     }
   },1000);
 }
 
-async function reloadData(){
-  await init();
-}
-
 function manualRefresh(){
   current=refreshTime;
-  reloadData();
-  showRefresh();
-}
-
-function showRefresh(){
-  const el=document.getElementById("timer");
-  el.innerText="✔ Odświeżono";
-  setTimeout(()=>{
-    el.innerText="Odświeżanie za: "+current+"s";
-  },1500);
+  init();
 }
 
 // start
