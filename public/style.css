@@ -1,21 +1,16 @@
-* {
-  box-sizing: border-box;
-}
-
 body {
   margin:0;
   background:#0c0c0c;
   color:#e5e5e5;
-  font-family: "Segoe UI", Arial, sans-serif;
+  font-family:Segoe UI, Arial;
 }
 
-/* NAVBAR */
+/* NAV */
 .nav {
   background:#121212;
   padding:15px 25px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
   border-bottom:1px solid #1f1f1f;
 }
 
@@ -24,46 +19,27 @@ body {
   font-size:18px;
 }
 
-.nav a {
-  color:#aaa;
-  margin-left:20px;
-  text-decoration:none;
-}
-
-.nav a:hover {
-  color:#fff;
-}
-
 /* MAIN */
 .container {
   max-width:1100px;
-  margin:40px auto;
-  padding:0 20px;
+  margin:30px auto;
 }
 
 /* PANEL */
 .panel {
   background:#151515;
-  border-radius:14px;
-  padding:25px;
-  box-shadow:0 0 40px rgba(0,0,0,0.6);
+  border-radius:12px;
+  padding:20px;
 }
 
-/* HEADER */
-h1 {
-  margin:0 0 20px;
-  font-size:26px;
-}
-
-/* SEARCH */
-.search {
+/* INPUT */
+input {
   width:100%;
-  padding:12px;
-  border-radius:8px;
-  border:none;
+  padding:10px;
+  margin-bottom:15px;
   background:#1f1f1f;
+  border:none;
   color:#fff;
-  margin-bottom:20px;
 }
 
 /* TABLE */
@@ -73,61 +49,37 @@ table {
 }
 
 th {
-  text-align:left;
   padding:12px;
+  text-align:left;
   font-size:13px;
   color:#888;
-  border-bottom:1px solid #222;
+  cursor:pointer;
 }
 
 td {
-  padding:12px;
+  padding:10px;
   border-bottom:1px solid #1a1a1a;
 }
 
-tr {
-  transition:0.2s;
-}
-
+/* HOVER */
 tr:hover {
   background:#1f1f1f;
-  cursor:pointer;
+}
+
+/* PODIUM */
+.gold {
+  background:linear-gradient(90deg,#3a2f00,#1a1a1a);
+}
+
+.silver {
+  background:linear-gradient(90deg,#2c2c2c,#1a1a1a);
+}
+
+.bronze {
+  background:linear-gradient(90deg,#3a1f00,#1a1a1a);
 }
 
 /* SMALL */
 .muted {
   color:#777;
-  font-size:13px;
-}
-
-/* CARD GRID (home) */
-.grid {
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:20px;
-}
-
-.card {
-  background:#151515;
-  padding:25px;
-  border-radius:14px;
-  text-align:center;
-  transition:0.2s;
-}
-
-.card:hover {
-  background:#1f1f1f;
-}
-
-.card a {
-  text-decoration:none;
-  color:#fff;
-  display:block;
-}
-
-canvas {
-  margin-top:20px;
-  background:#111;
-  padding:10px;
-  border-radius:10px;
 }
