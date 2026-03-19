@@ -17,20 +17,30 @@ body {
   min-height:100vh;
   border-right:1px solid #1f1f1f;
   padding:20px 15px;
+  transition:0.3s;
 }
 
+.sidebar.collapsed {
+  width:70px;
+}
+
+/* LOGO */
 .logo {
   font-size:18px;
   margin-bottom:20px;
 }
 
+/* MENU */
 .menu a {
-  display:block;
+  display:flex;
+  align-items:center;
+  gap:10px;
   padding:10px;
   margin-bottom:5px;
   color:#aaa;
   text-decoration:none;
   border-radius:6px;
+  transition:0.2s;
 }
 
 .menu a:hover {
@@ -41,6 +51,23 @@ body {
 .active {
   background:#222;
   color:#fff !important;
+}
+
+/* ICON */
+.icon {
+  font-size:18px;
+}
+
+/* HIDE TEXT WHEN COLLAPSED */
+.sidebar.collapsed .text {
+  display:none;
+}
+
+/* TOGGLE BUTTON */
+.toggle {
+  cursor:pointer;
+  margin-bottom:20px;
+  font-size:20px;
 }
 
 /* CONTENT */
