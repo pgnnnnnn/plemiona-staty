@@ -16,11 +16,11 @@
 <table>
 <thead>
 <tr>
-<th>#</th>
-<th>Tag</th>
-<th>Punkty</th>
-<th>Wioski</th>
-<th>Członkowie</th>
+<th onclick="sortBy('rank')">#</th>
+<th onclick="sortBy('tag')">Tag</th>
+<th onclick="sortBy('points')">Punkty</th>
+<th onclick="sortBy('villages')">Wioski</th>
+<th onclick="sortBy('members')">Członkowie</th>
 </tr>
 </thead>
 <tbody id="t"></tbody>
@@ -30,6 +30,7 @@
 
 <script>
 let data=[];
+let sortKey="points";
 
 async function init(){
   const res = await fetch("/api/tribes");
@@ -37,24 +38,38 @@ async function init(){
   render();
 }
 
+function sortBy(k){
+  sortKey=k;
+  render();
+}
+
 document.getElementById("search").addEventListener("input", render);
 
 function render(){
-  const q = document.getElementById("search").value.toLowerCase();
+  const q=document.getElementById("search").value.toLowerCase();
+
+  let list=[...data]
+  .filter(x=>x.tag.toLowerCase().includes(q))
+  .sort((a,b)=>{
+    if(sortKey==="tag") return a.tag.localeCompare(b.tag);
+    return b[sortKey]-a[sortKey];
+  });
 
   let i=1;
 
   document.getElementById("t").innerHTML =
-  data.filter(x => (x.tag||"").toLowerCase().includes(q))
-  .slice(0,200)
-  .map(x=>`
-  <tr>
+  list.slice(0,200).map(x=>`
+  <tr onclick="openTribe(${x.id})">
     <td>${i++}</td>
-    <td>${x.tag}</td>
+    <td style="color:${x.color}">${x.tag}</td>
     <td>${x.points}</td>
     <td>${x.villages}</td>
     <td>${x.members}</td>
   </tr>`).join("");
+}
+
+function openTribe(id){
+  location.href="/tribe.html?id="+id;
 }
 
 init();
