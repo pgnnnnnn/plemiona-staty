@@ -10,7 +10,6 @@ const PORT = process.env.PORT || 3000;
 // --- BAZA ---
 const db = new sqlite3.Database("./stats.db");
 
-// Tworzenie tabel
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS tribes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,7 +19,6 @@ db.serialize(() => {
     villages INTEGER,
     members INTEGER
   )`);
-
   db.run(`CREATE TABLE IF NOT EXISTS players (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     rank INTEGER,
@@ -32,21 +30,15 @@ db.serialize(() => {
 
 // --- FETCH PLEMION ---
 async function fetchTribes() {
-  const res = await axios.get("https://pl224.plemiona.pl/map/ally.txt", {
-    responseType: "arraybuffer"
-  });
+  const res = await axios.get("https://pl224.plemiona.pl/map/ally.txt", { responseType: "arraybuffer" });
   const data = iconv.decode(Buffer.from(res.data), 'windows-1250');
   const lines = data.split("\n");
-
   db.run("DELETE FROM tribes");
-
   let rank = 1;
   lines.forEach(line => {
     if(!line) return;
     const [id, name, tag, members, villages, points] = line.split(",");
-    db.run(
-      `INSERT INTO tribes (rank,name,points,villages,members)
-       VALUES (?, ?, ?, ?, ?)`,
+    db.run(`INSERT INTO tribes (rank,name,points,villages,members) VALUES (?,?,?,?,?)`,
       [rank, tag.replace(/%/g,""), points.replace(/%/g,""), villages.replace(/%/g,""), members.replace(/%/g,"")]
     );
     rank++;
@@ -55,21 +47,15 @@ async function fetchTribes() {
 
 // --- FETCH GRACZY ---
 async function fetchPlayers() {
-  const res = await axios.get("https://pl224.plemiona.pl/map/player.txt", {
-    responseType: "arraybuffer"
-  });
+  const res = await axios.get("https://pl224.plemiona.pl/map/player.txt", { responseType: "arraybuffer" });
   const data = iconv.decode(Buffer.from(res.data), 'windows-1250');
   const lines = data.split("\n");
-
   db.run("DELETE FROM players");
-
   let rank = 1;
   lines.forEach(line => {
     if(!line) return;
     const [id, name, tribe, villages, points] = line.split(",");
-    db.run(
-      `INSERT INTO players (rank,name,points,villages)
-       VALUES (?, ?, ?, ?)`,
+    db.run(`INSERT INTO players (rank,name,points,villages) VALUES (?,?,?,?)`,
       [rank, name.replace(/%/g,""), points.replace(/%/g,""), villages.replace(/%/g,"")]
     );
     rank++;
@@ -92,6 +78,19 @@ app.get("/api/players", (req, res) => {
     if(err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
+});
+
+// --- API MAPA ---
+app.get("/api/map", async (req, res) => {
+  try {
+    const resPlayers = await axios.get("https://pl224.plemiona.pl/map/player.txt", { responseType: "arraybuffer" });
+    const resAllies = await axios.get("https://pl224.plemiona.pl/map/ally.txt", { responseType: "arraybuffer" });
+    const playersData = iconv.decode(Buffer.from(resPlayers.data), "windows-1250");
+    const alliesData = iconv.decode(Buffer.from(resAllies.data), "windows-1250");
+    res.json({ players: playersData, allies: alliesData });
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // --- UPDATE ---
