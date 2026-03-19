@@ -7,34 +7,20 @@
 </head>
 <body>
 
-<div class="nav">
-  <div class="logo">STATY 224</div>
-  <div>
-    <a href="/">Home</a>
-  </div>
-</div>
+<div class="container panel">
 
-<div class="container">
-
-<div class="panel">
-
-<h1>Ranking przyrostów</h1>
+<h1>Przyrosty (TWStats)</h1>
 
 <table>
 <thead>
 <tr>
 <th>#</th>
 <th>Plemie</th>
-<th>Przyrost</th>
-<th>Punkty</th>
+<th>Gain</th>
 </tr>
 </thead>
-
 <tbody id="t"></tbody>
-
 </table>
-
-</div>
 
 </div>
 
@@ -43,21 +29,15 @@ async function load(){
   const res = await fetch("/api/gain");
   const data = await res.json();
 
-  let i = 1;
+  let i=1;
 
   document.getElementById("t").innerHTML =
-  data.map(x=>`
-    <tr onclick="go(${x.id})">
-      <td>${i++}</td>
-      <td>${x.tag}</td>
-      <td style="color:#4cff4c">+${x.gain}</td>
-      <td>${x.points}</td>
-    </tr>
-  `).join("");
-}
-
-function go(id){
-  location.href="/tribe.html?id="+id;
+  data.slice(0,100).map(x=>`
+  <tr>
+    <td>${i++}</td>
+    <td>${x.tag}</td>
+    <td style="color:#4cff4c">+${x.gain}</td>
+  </tr>`).join("");
 }
 
 load();
