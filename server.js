@@ -155,17 +155,20 @@ app.get("/api/players", (req, res) => {
 });
 
 // --- UPDATE ---
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 app.get("/update", async (req, res) => {
   try {
     await fetchTribes();
+
+    await sleep(2000); // przerwa 2 sekundy
+
     await fetchPlayers();
+
     res.json({ message: "Zaktualizowano dane" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-// --- START ---
-app.listen(PORT, () => {
-  console.log("Serwer działa na porcie " + PORT);
 });
