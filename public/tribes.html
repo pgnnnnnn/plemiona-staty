@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Plemiona</title>
+<title>Top 25 Plemion</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Ranking Plemion</h1>
+<h1>Top 25 Plemion</h1>
 <button onclick="update()">Aktualizuj</button>
 
-<table id="t">
+<table>
 <thead>
 <tr>
 <th>#</th>
@@ -29,10 +29,15 @@ async function load(){
   const tbody = document.querySelector("tbody");
   tbody.innerHTML = "";
 
-  data.forEach(t=>{
+  data.forEach((t, index)=>{
+    let color = "";
+    if(index === 0) color = "gold";
+    else if(index === 1) color = "silver";
+    else if(index === 2) color = "orange";
+
     tbody.innerHTML += `
-      <tr>
-        <td>${t.rank}</td>
+      <tr style="background-color:${color};">
+        <td>${index+1}</td>
         <td>${t.name}</td>
         <td>${t.points}</td>
         <td>${t.villages}</td>
