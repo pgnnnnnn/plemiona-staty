@@ -1,18 +1,27 @@
 body {
-  background:#111;
+  background:#0f0f0f;
   color:#fff;
   font-family:Arial;
 }
 
 .container {
-  max-width:900px;
+  max-width:1000px;
   margin:auto;
 }
 
 .panel {
   background:#1a1a1a;
   padding:20px;
-  border-radius:10px;
+  border-radius:12px;
+}
+
+input {
+  padding:10px;
+  width:100%;
+  margin-bottom:15px;
+  background:#222;
+  color:#fff;
+  border:none;
 }
 
 table {
@@ -20,8 +29,12 @@ table {
   border-collapse:collapse;
 }
 
-td,th {
-  padding:8px;
+th,td {
+  padding:10px;
   border-bottom:1px solid #333;
   text-align:center;
+}
+
+tr:hover {
+  background:#2a2a2a;
 }
