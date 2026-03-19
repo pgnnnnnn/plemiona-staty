@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Plemie</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="nav">
+  <div class="logo">STATY 224</div>
+  <div>
+    <a href="/tribes.html">← Powrót</a>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="panel">
+
+<h1 id="name"></h1>
+
+<p class="muted" id="stats"></p>
+
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Nick</th>
+<th>Punkty</th>
+<th>Wioski</th>
+</tr>
+</thead>
+<tbody id="t"></tbody>
+</table>
+
+</div>
+
+</div>
+
+<script>
+const id = new URLSearchParams(location.search).get("id");
+
+async function load(){
+  const res = await fetch("/api/tribe/"+id);
+  const d = await res.json();
+
+  document.getElementById("name").innerText = d.tribe.tag;
+  document.getElementById("stats").innerText =
+    "Punkty: "+d.tribe.points+" | Wioski: "+d.tribe.villages;
+
+  let i=1;
+
+  document.getElementById("t").innerHTML =
+  d.members.map(p=>`
+    <tr>
+      <td>${i++}</td>
+      <td>${p.name}</td>
+      <td>${p.points}</td>
+      <td>${p.villages}</td>
+    </tr>
+  `).join("");
+}
+
+load();
+</script>
+
+</body>
+</html>
