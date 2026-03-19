@@ -1,25 +1,45 @@
 body {
     font-family: Arial;
-    background: #111;
-    color: white;
+    background: #0d1117;
+    color: #fff;
+    margin: 0;
+}
+
+h1 {
     text-align: center;
+    padding: 20px;
+}
+
+.container {
+    display: flex;
+}
+
+.table-box {
+    width: 50%;
+    padding: 20px;
+}
+
+.map-box {
+    width: 50%;
+    padding: 20px;
 }
 
 table {
-    margin: 20px auto;
+    width: 100%;
     border-collapse: collapse;
-    width: 80%;
 }
 
 th, td {
-    padding: 10px;
-    border: 1px solid #444;
+    padding: 8px;
+    border-bottom: 1px solid #333;
 }
 
-th {
+tr:hover {
     background: #222;
 }
 
-tr:nth-child(even) {
-    background: #1a1a1a;
+canvas {
+    width: 100%;
+    height: 600px;
+    background: black;
 }
