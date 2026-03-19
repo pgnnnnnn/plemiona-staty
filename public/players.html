@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Gracze</title>
+<title>Top 25 Graczy</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Ranking Graczy</h1>
+<h1>Top 25 Graczy</h1>
 <button onclick="update()">Aktualizuj</button>
 
 <table>
@@ -16,7 +16,6 @@
 <th>Gracz</th>
 <th>Punkty</th>
 <th>Wioski</th>
-<th>Plemie</th>
 </tr>
 </thead>
 <tbody></tbody>
@@ -29,14 +28,13 @@ async function load(){
   const tbody = document.querySelector("tbody");
   tbody.innerHTML = "";
 
-  data.forEach(p=>{
+  data.forEach((p, index)=>{
     tbody.innerHTML += `
       <tr>
-        <td>${p.rank}</td>
+        <td>${index+1}</td>
         <td>${p.name}</td>
         <td>${p.points}</td>
         <td>${p.villages}</td>
-        <td>${p.tribe}</td>
       </tr>`;
   });
 }
