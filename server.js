@@ -1,120 +1,71 @@
 const express = require("express");
 const axios = require("axios");
-const cheerio = require("cheerio");
-const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const db = new sqlite3.Database("./stats.db");
+// cache danych (jak mikamait)
+let tribes = [];
+let players = [];
 
-db.run(`CREATE TABLE IF NOT EXISTS tribes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  rank INTEGER,
-  name TEXT UNIQUE,
-  points INTEGER,
-  villages INTEGER,
-  members INTEGER,
-  last_update TEXT
-)`);
-
-db.run(`CREATE TABLE IF NOT EXISTS players (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  rank INTEGER,
-  name TEXT UNIQUE,
-  points INTEGER,
-  villages INTEGER,
-  tribe TEXT,
-  last_update TEXT
-)`);
-
-// FETCH SAFE
-async function fetchTribes() {
+// 🔥 POBIERANIE DANYCH Z MAPY (STABILNE)
+async function updateData() {
   try {
-    const { data } = await axios.get("https://pl.twstats.com/pl224/index.php?page=ally", { timeout: 10000 });
-    const $ = cheerio.load(data);
-    const now = new Date().toISOString();
+    console.log("Aktualizacja danych...");
 
-    $("table.players tr").each((i, el) => {
-      const tds = $(el).find("td");
-      if (tds.length) {
-        db.run(`
-          INSERT OR REPLACE INTO tribes (rank,name,points,villages,members,last_update)
-          VALUES (?, ?, ?, ?, ?, ?)`,
-          [
-            parseInt($(tds[0]).text()) || 0,
-            $(tds[1]).text().trim(),
-            parseInt($(tds[2]).text().replace(/\D/g,"")) || 0,
-            parseInt($(tds[3]).text().replace(/\D/g,"")) || 0,
-            parseInt($(tds[4]).text().replace(/\D/g,"")) || 0,
-            now
-          ]);
-      }
+    // PLEMIONA
+    const ally = await axios.get("https://pl224.plemiona.pl/map/ally.txt");
+    tribes = ally.data.split("\n").map(line => {
+      const [id, name, tag, members, villages, points] = line.split(",");
+      return {
+        id,
+        name,
+        tag,
+        members: Number(members),
+        villages: Number(villages),
+        points: Number(points)
+      };
     });
 
-    console.log("Tribes OK");
-  } catch(e) {
-    console.log("Tribes error:", e.message);
+    // GRACZE
+    const player = await axios.get("https://pl224.plemiona.pl/map/player.txt");
+    players = player.data.split("\n").map(line => {
+      const [id, name, tribe, villages, points] = line.split(",");
+      return {
+        id,
+        name,
+        tribe,
+        villages: Number(villages),
+        points: Number(points)
+      };
+    });
+
+    console.log("OK update");
+  } catch (e) {
+    console.log("Błąd update:", e.message);
   }
 }
 
-async function fetchPlayers() {
-  try {
-    const { data } = await axios.get("https://pl.twstats.com/pl224/index.php?page=player", { timeout: 10000 });
-    const $ = cheerio.load(data);
-    const now = new Date().toISOString();
+// pierwsze odpalenie
+updateData();
 
-    $("table.players tr").each((i, el) => {
-      const tds = $(el).find("td");
-      if (tds.length) {
-        db.run(`
-          INSERT OR REPLACE INTO players (rank,name,points,villages,tribe,last_update)
-          VALUES (?, ?, ?, ?, ?, ?)`,
-          [
-            parseInt($(tds[0]).text()) || 0,
-            $(tds[1]).text().trim(),
-            parseInt($(tds[2]).text().replace(/\D/g,"")) || 0,
-            parseInt($(tds[3]).text().replace(/\D/g,"")) || 0,
-            $(tds[4]).text().trim(),
-            now
-          ]);
-      }
-    });
-
-    console.log("Players OK");
-  } catch(e) {
-    console.log("Players error:", e.message);
-  }
-}
+// co 5 minut
+setInterval(updateData, 1000 * 60 * 5);
 
 // STATIC
-app.use(express.static(path.join(__dirname,"public")));
-
-app.get("/", (req,res)=>{
-  res.sendFile(path.join(__dirname,"public","index.html"));
-});
+app.use(express.static(path.join(__dirname, "public")));
 
 // API
-app.get("/api/tribes",(req,res)=>{
-  db.all("SELECT * FROM tribes ORDER BY rank ASC",[],(e,r)=>res.json(r));
+app.get("/api/tribes", (req, res) => {
+  const sorted = tribes.sort((a, b) => b.points - a.points);
+  res.json(sorted.slice(0, 100));
 });
 
-app.get("/api/players",(req,res)=>{
-  db.all("SELECT * FROM players ORDER BY rank ASC",[],(e,r)=>res.json(r));
+app.get("/api/players", (req, res) => {
+  const sorted = players.sort((a, b) => b.points - a.points);
+  res.json(sorted.slice(0, 100));
 });
 
-// UPDATE
-app.get("/update", async (req,res)=>{
-  await fetchTribes();
-  await fetchPlayers();
-  res.json({ok:true});
-});
-
-// AUTO UPDATE 5 MIN
-setInterval(()=>{
-  fetchTribes();
-  fetchPlayers();
-}, 1000 * 60 * 5);
-
-app.listen(PORT,()=>console.log("Server działa"));
+// START
+app.listen(PORT, () => console.log("Server działa"));
