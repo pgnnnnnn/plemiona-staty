@@ -8,45 +8,40 @@
 <body>
 
 <div class="container panel">
+<h1>Ranking Plemion</h1>
 
-<h1>Plemiona</h1>
-<button onclick="update()">Aktualizuj</button>
-
-<table id="t">
+<table>
 <thead>
 <tr>
 <th>#</th>
-<th>Nazwa</th>
+<th>Tag</th>
 <th>Punkty</th>
 <th>Wioski</th>
 <th>Członkowie</th>
 </tr>
 </thead>
-<tbody></tbody>
+<tbody id="t"></tbody>
 </table>
 
 </div>
 
 <script>
 async function load(){
-  const r = await fetch("/api/tribes");
-  const d = await r.json();
-  const t = document.querySelector("#t tbody");
-  t.innerHTML="";
-  d.forEach(x=>{
-    t.innerHTML += `<tr>
-    <td>${x.rank}</td>
-    <td>${x.name}</td>
-    <td>${x.points}</td>
-    <td>${x.villages}</td>
-    <td>${x.members}</td>
-    </tr>`;
-  });
+  const res = await fetch("/api/tribes");
+  const data = await res.json();
+
+  let i = 1;
+  document.getElementById("t").innerHTML = data.map(x=>`
+    <tr>
+      <td>${i++}</td>
+      <td>${x.tag}</td>
+      <td>${x.points}</td>
+      <td>${x.villages}</td>
+      <td>${x.members}</td>
+    </tr>
+  `).join("");
 }
-async function update(){
-  await fetch("/update");
-  load();
-}
+
 load();
 </script>
 
