@@ -17,6 +17,11 @@ h1 {
     border-bottom:1px solid #ddd;
 }
 
+.grid {
+    display:flex;
+    gap:20px;
+}
+
 .card {
     background:white;
     margin:20px;
@@ -49,7 +54,26 @@ canvas {
     color:white;
 }
 
-#legend {
-    margin-top:10px;
-    font-size:12px;
+#tribeTable {
+    width:100%;
+    border-collapse:collapse;
+}
+
+#tribeTable th {
+    background:#222;
+    color:white;
+    padding:8px;
+}
+
+#tribeTable td {
+    padding:8px;
+    border-bottom:1px solid #ddd;
+}
+
+#tooltip {
+    position:absolute;
+    background:black;
+    color:white;
+    padding:5px;
+    display:none;
 }
