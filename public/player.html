@@ -1,50 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Gracz</title>
+<title>Profil gracza</title>
 <link rel="stylesheet" href="style.css">
+
+<style>
+.card{
+  background:#1a1a1a;
+  padding:20px;
+  border-radius:8px;
+}
+.big{font-size:26px;font-weight:bold;}
+.stat{margin-top:10px;font-size:18px;}
+</style>
 </head>
+
 <body>
 
-<div class="nav">
-  <div class="logo">STATY 224</div>
-  <div>
-    <a href="/players.html">← Powrót</a>
-  </div>
+<div class="layout">
+
+<div class="sidebar">
+  <div class="logo">STATY</div>
 </div>
 
-<div class="container">
-
+<div class="content">
 <div class="panel">
 
-<h1 id="name"></h1>
+<div class="card">
+<div id="name" class="big"></div>
+<div id="tribe" class="stat"></div>
+<div id="points" class="stat"></div>
+<div id="villages" class="stat"></div>
+</div>
 
-<p id="stats"></p>
-
-<p>
-<a id="tw" target="_blank">Zobacz na TWStats</a>
-</p>
-
+</div>
 </div>
 
 </div>
 
 <script>
-const id = new URLSearchParams(location.search).get("id");
+function getId(){
+  return new URL(window.location.href).searchParams.get("id");
+}
 
 async function load(){
-  const res = await fetch("/api/player/"+id);
-  const p = await res.json();
+  const res=await fetch("/api/player/"+getId());
+  const p=await res.json();
 
-  document.getElementById("name").innerText = p.name || "Brak danych";
-
-  document.getElementById("stats").innerText =
-    "Punkty: " + (p.points || 0) +
-    " | Wioski: " + (p.villages || 0);
-
-  document.getElementById("tw").href =
-    "https://pl.twstats.com/pl224/index.php?page=player&id=" + id;
+  document.getElementById("name").innerText=p.name;
+  document.getElementById("tribe").innerHTML="Plemie: <span style='color:"+p.color+"'>"+p.tribe+"</span>";
+  document.getElementById("points").innerText="Punkty: "+p.points.toLocaleString();
+  document.getElementById("villages").innerText="Wioski: "+p.villages;
 }
 
 load();
