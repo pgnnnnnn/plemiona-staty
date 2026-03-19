@@ -9,7 +9,7 @@
 
 <div class="container panel">
 
-<h1>Przyrosty (TWStats)</h1>
+<h1>Przyrosty (24h)</h1>
 
 <table>
 <thead>
@@ -17,6 +17,7 @@
 <th>#</th>
 <th>Plemie</th>
 <th>Gain</th>
+<th>Punkty</th>
 </tr>
 </thead>
 <tbody id="t"></tbody>
@@ -32,12 +33,14 @@ async function load(){
   let i=1;
 
   document.getElementById("t").innerHTML =
-  data.slice(0,100).map(x=>`
-  <tr>
-    <td>${i++}</td>
-    <td>${x.tag}</td>
-    <td style="color:#4cff4c">+${x.gain}</td>
-  </tr>`).join("");
+  data.map(x=>`
+    <tr>
+      <td>${i++}</td>
+      <td>${x.tag}</td>
+      <td style="color:#4cff4c">+${x.gain}</td>
+      <td>${x.points}</td>
+    </tr>
+  `).join("");
 }
 
 load();
