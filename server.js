@@ -89,9 +89,13 @@ app.get("/api/tribes", (req, res) => {
 });
 
 app.get("/api/players", (req, res) => {
-  db.all("SELECT * FROM players ORDER BY points DESC", (err, rows) => {
-    res.json(rows);
-  });
+  db.all(
+    "SELECT rank, name, points, villages FROM players ORDER BY points DESC LIMIT 25",
+    (err, rows) => {
+      if(err) return res.status(500).json({ error: err.message });
+      res.json(rows);
+    }
+  );
 });
 
 // --- UPDATE ---
