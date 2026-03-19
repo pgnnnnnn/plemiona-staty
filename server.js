@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 let tribes = [];
 let players = [];
 
-// 🔥 FUNKCJA DEKODOWANIA (naprawia polskie znaki)
+// 🔥 dekodowanie znaków
 function decode(text){
   try{
     return decodeURIComponent(escape(text));
@@ -36,7 +36,7 @@ async function loadMap(){
       };
     });
 
-    // GRACZE (NAPRAWIONE)
+    // GRACZE
     const player = await axios.get("https://pl224.plemiona.pl/map/player.txt");
 
     players = player.data.split("\n").map(line=>{
@@ -61,7 +61,7 @@ async function loadMap(){
 loadMap();
 setInterval(loadMap, 1000 * 60 * 5);
 
-// STATIC + UTF-8
+// STATIC + UTF
 app.use(express.static(path.join(__dirname,"public")));
 
 app.use((req,res,next)=>{
