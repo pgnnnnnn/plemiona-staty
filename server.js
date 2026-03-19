@@ -80,17 +80,31 @@ app.get("/api/villages", (req, res) => {
 });
 
 app.get("/api/history", (req, res) => {
-    const files = fs.readdirSync("history");
-    res.json(files);
+    res.json(fs.readdirSync("history"));
 });
 
 app.get("/api/history/:date", (req, res) => {
     try {
-        const data = fs.readFileSync(`history/${req.params.date}`);
-        res.json(JSON.parse(data));
+        res.json(JSON.parse(fs.readFileSync(`history/${req.params.date}`)));
     } catch {
         res.json([]);
     }
+});
+
+app.get("/api/tribes", (req, res) => {
+    const players = JSON.parse(fs.readFileSync("data.json"));
+
+    const tribes = {};
+
+    players.forEach(p => {
+        if (!tribes[p.tribe]) {
+            tribes[p.tribe] = { tribe: p.tribe, points: 0, members: 0 };
+        }
+        tribes[p.tribe].points += p.points;
+        tribes[p.tribe].members++;
+    });
+
+    res.json(Object.values(tribes));
 });
 
 app.use(express.static("public"));
