@@ -9,47 +9,53 @@
 
 <div class="layout">
 
-<div class="sidebar">
-  <div class="logo">STATY 224</div>
+<div class="sidebar" id="sidebar">
+  <div class="toggle" onclick="toggle()">☰</div>
+  <div class="logo">STATY</div>
 
   <div class="menu">
-    <a href="/" class="active">Dashboard</a>
-    <a href="/players.html">Gracze</a>
-    <a href="/tribes.html">Plemiona</a>
-    <a href="/map.html">Mapa</a>
+    <a href="/" class="active" data-tip="Dashboard">🏠 <span class="text">Dashboard</span></a>
+    <a href="/players.html" data-tip="Gracze">👤 <span class="text">Gracze</span></a>
+    <a href="/tribes.html" data-tip="Plemiona">⚔️ <span class="text">Plemiona</span></a>
   </div>
 </div>
 
 <div class="content">
-
 <div class="panel">
-
 <h1>Dashboard</h1>
-
 <div id="stats"></div>
-
 </div>
-
 </div>
 
 </div>
 
 <script>
+function toggle(){
+  const s=document.getElementById("sidebar");
+  s.classList.toggle("collapsed");
+  localStorage.setItem("sidebar", s.classList.contains("collapsed"));
+}
+
+window.onload=()=>{
+  if(localStorage.getItem("sidebar")==="true"){
+    document.getElementById("sidebar").classList.add("collapsed");
+  }
+};
+
 async function load(){
-  const [p,t] = await Promise.all([
+  const [p,t]=await Promise.all([
     fetch("/api/players"),
     fetch("/api/tribes")
   ]);
 
-  const players = await p.json();
-  const tribes = await t.json();
+  const players=await p.json();
+  const tribes=await t.json();
 
-  document.getElementById("stats").innerHTML = `
+  document.getElementById("stats").innerHTML=`
     Gracze: ${players.length}<br>
-    Plemiona: ${tribes.length}<br>
+    Plemiona: ${tribes.length}
   `;
 }
-
 load();
 </script>
 
