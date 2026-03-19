@@ -5,7 +5,6 @@ body {
   font-family:Segoe UI, Arial;
 }
 
-/* LAYOUT */
 .layout {
   display:flex;
 }
@@ -24,13 +23,11 @@ body {
   width:70px;
 }
 
-/* LOGO */
 .logo {
   font-size:18px;
   margin-bottom:20px;
 }
 
-/* MENU */
 .menu a {
   display:flex;
   align-items:center;
@@ -40,7 +37,7 @@ body {
   color:#aaa;
   text-decoration:none;
   border-radius:6px;
-  transition:0.2s;
+  position:relative;
 }
 
 .menu a:hover {
@@ -53,17 +50,33 @@ body {
   color:#fff !important;
 }
 
-/* ICON */
 .icon {
   font-size:18px;
 }
 
-/* HIDE TEXT WHEN COLLAPSED */
 .sidebar.collapsed .text {
   display:none;
 }
 
-/* TOGGLE BUTTON */
+/* 🔥 TOOLTIP */
+.menu a::after {
+  content:attr(data-tip);
+  position:absolute;
+  left:70px;
+  background:#222;
+  padding:5px 8px;
+  border-radius:5px;
+  font-size:12px;
+  opacity:0;
+  pointer-events:none;
+  transition:0.2s;
+}
+
+.sidebar.collapsed .menu a:hover::after {
+  opacity:1;
+}
+
+/* TOGGLE */
 .toggle {
   cursor:pointer;
   margin-bottom:20px;
@@ -76,11 +89,22 @@ body {
   padding:25px;
 }
 
-/* PANEL */
 .panel {
   background:#151515;
   border-radius:12px;
   padding:20px;
+}
+
+/* BACK BUTTON */
+.back {
+  margin-bottom:15px;
+  display:inline-block;
+  cursor:pointer;
+  color:#aaa;
+}
+
+.back:hover {
+  color:#fff;
 }
 
 /* TABLE */
@@ -113,8 +137,3 @@ input {
   border:none;
   color:#fff;
 }
-
-/* PODIUM */
-.gold { background:#3a2f00; }
-.silver { background:#2c2c2c; }
-.bronze { background:#3a1f00; }
