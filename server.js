@@ -83,14 +83,8 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // --- API ---
 app.get("/api/tribes", (req, res) => {
-  db.all("SELECT * FROM tribes ORDER BY points DESC", (err, rows) => {
-    res.json(rows);
-  });
-});
-
-app.get("/api/players", (req, res) => {
   db.all(
-    "SELECT rank, name, points, villages FROM players ORDER BY points DESC LIMIT 25",
+    "SELECT rank, name, points, villages, members FROM tribes ORDER BY points DESC LIMIT 25",
     (err, rows) => {
       if(err) return res.status(500).json({ error: err.message });
       res.json(rows);
