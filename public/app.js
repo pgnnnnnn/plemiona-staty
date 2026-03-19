@@ -1,5 +1,7 @@
 const table = document.querySelector("#table tbody");
 const tribeTable = document.querySelector("#tribes tbody");
+const guestTable = document.querySelector("#guest tbody");
+
 const canvas = document.getElementById("map");
 const ctx = canvas.getContext("2d");
 
@@ -40,16 +42,15 @@ async function load(){
 
     const world = document.getElementById("world").value;
 
-    table.innerHTML = "Ładowanie...";
-
     const data = await fetch(`/api/data/${world}`).then(r=>r.json());
+    const guest = await fetch(`/api/guest/${world}`).then(r=>r.json());
 
     const warStats = calculateWar(data.conquers);
 
     const playerMap = {};
     data.players.forEach(p => playerMap[p.id] = p.tribe);
 
-    // GRACZE
+    // 👤 GRACZE
     table.innerHTML = "";
 
     data.players
@@ -65,7 +66,7 @@ async function load(){
             table.appendChild(tr);
         });
 
-    // PLEMIONA
+    // 🏰 PLEMIONA (Twoje)
     const tribes = {};
 
     data.players.forEach(p=>{
@@ -103,7 +104,23 @@ async function load(){
             tribeTable.appendChild(tr);
         });
 
-    // MAPA
+    // 📋 GUEST (oficjalne)
+    guestTable.innerHTML = "";
+
+    guest.tribes.slice(0,15).forEach((t,i)=>{
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${i+1}</td>
+            <td>${t.name}</td>
+            <td>${t.points}</td>
+            <td>${t.members}</td>
+        `;
+
+        guestTable.appendChild(tr);
+    });
+
+    // 🗺️ MAPA
     ctx.fillStyle="black";
     ctx.fillRect(0,0,500,500);
 
