@@ -1,139 +1,173 @@
-const tribeColors = {};
-let villagesData = [];
-let historyFiles = [];
-let replayIndex = 0;
-let playing = false;
+let currentWorld="pl224";
+let villagesData=[];
+let playersData=[];
+let historyFiles=[];
+let replayIndex=0;
+let playing=false;
 
-function getColor(t) {
-    if (!tribeColors[t]) {
-        tribeColors[t] = `hsl(${Math.random()*360},70%,50%)`;
+let chart, tribeChart;
+
+const tribeColors={};
+
+function getColor(t){
+    if(!tribeColors[t]){
+        tribeColors[t]=`hsl(${Math.random()*360},70%,50%)`;
     }
     return tribeColors[t];
 }
 
-// TRIBES
-fetch("/api/tribes").then(r=>r.json()).then(data=>{
-    data.sort((a,b)=>b.points-a.points);
+// WORLD
+document.getElementById("worldSelect").onchange=e=>{
+    currentWorld=e.target.value;
+    loadWorld();
+};
 
-    const tbody=document.querySelector("#tribeTable tbody");
+async function loadWorld(){
+    const data=await fetch(`/api/world/${currentWorld}`).then(r=>r.json());
+    playersData=data.players;
+    villagesData=data.villages;
 
-    data.slice(0,15).forEach((t,i)=>{
-        const tr=document.createElement("tr");
-        tr.innerHTML=`
-            <td>${i+1}</td>
-            <td style="color:${getColor(t.tribe)}">${t.tribe}</td>
-            <td>${t.points.toLocaleString()}</td>
-            <td>${t.members}</td>
-        `;
-        tbody.appendChild(tr);
-    });
-});
+    loadHistory();
+    loadChart();
+    loadTribeChart();
+}
 
-// villages
-fetch("/api/villages").then(r=>r.json()).then(v=>{
-    villagesData = v;
-});
+// HISTORY
+async function loadHistory(){
+    historyFiles=await fetch(`/api/history/${currentWorld}`).then(r=>r.json());
+    historyFiles.sort();
 
-// history
-fetch("/api/history").then(r=>r.json()).then(files=>{
-    historyFiles = files.sort();
+    const slider=document.getElementById("slider");
+    slider.max=historyFiles.length-1;
 
-    const slider = document.getElementById("slider");
-    slider.max = historyFiles.length - 1;
+    slider.oninput=()=>{
+        replayIndex=slider.value;
+        loadReplay();
+    };
 
     loadReplay();
+}
 
-    slider.addEventListener("input",()=>{
-        replayIndex = slider.value;
-        loadReplay();
-    });
-});
+// REPLAY
+async function loadReplay(){
+    if(!historyFiles.length) return;
 
-async function loadReplay() {
-    const date = historyFiles[replayIndex];
-    document.getElementById("dateLabel").textContent = date;
+    const date=historyFiles[replayIndex];
+    document.getElementById("dateLabel").textContent=date;
 
-    const players = await fetch(`/api/history/${date}`).then(r=>r.json());
+    const players=await fetch(`/api/history/${currentWorld}/${date}`).then(r=>r.json());
 
     players.sort((a,b)=>b.points-a.points);
 
-    const topTribes = {};
+    const topTribes={};
     players.slice(0,15).forEach(p=>topTribes[p.tribe]=true);
 
     drawMap(topTribes);
 }
 
 // MAPA
-const canvas = document.getElementById("map");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("map");
+const ctx=canvas.getContext("2d");
 
-canvas.width = 800;
-canvas.height = 800;
+canvas.width=800;
+canvas.height=800;
 
-let scale = 2;
-let offsetX = 0;
-let offsetY = 0;
-let isDragging = false;
-let lastX, lastY;
+let scale=2, offsetX=0, offsetY=0;
 
-function drawMap(topTribes) {
+function drawMap(topTribes){
     ctx.fillStyle="black";
     ctx.fillRect(0,0,800,800);
 
     villagesData.forEach(v=>{
-        if (!topTribes[v.tribe]) return;
+        if(!topTribes[v.tribe]) return;
 
-        ctx.fillStyle = getColor(v.tribe);
-
-        ctx.fillRect(
-            v.x/scale + offsetX,
-            v.y/scale + offsetY,
-            2,2
-        );
+        ctx.fillStyle=getColor(v.tribe);
+        ctx.fillRect(v.x/scale+offsetX,v.y/scale+offsetY,2,2);
     });
 }
 
-// DRAG
-canvas.addEventListener("mousedown", e=>{
-    isDragging=true;
-    lastX=e.clientX;
-    lastY=e.clientY;
-});
-
-canvas.addEventListener("mouseup", ()=>isDragging=false);
-
-canvas.addEventListener("mousemove", e=>{
-    if (isDragging) {
-        offsetX += e.clientX-lastX;
-        offsetY += e.clientY-lastY;
-        lastX=e.clientX;
-        lastY=e.clientY;
-        loadReplay();
-    }
-});
-
-// ZOOM
-canvas.addEventListener("wheel", e=>{
-    e.preventDefault();
-    scale *= e.deltaY > 0 ? 1.1 : 0.9;
-    loadReplay();
-});
-
 // PLAY
-document.getElementById("playBtn").addEventListener("click", ()=>{
-    playing = !playing;
-    if (playing) play();
-});
+document.getElementById("playBtn").onclick=()=>{
+    playing=!playing;
+    if(playing) play();
+};
 
-function play() {
-    if (!playing) return;
-
-    replayIndex++;
-    if (replayIndex >= historyFiles.length) replayIndex = 0;
-
-    document.getElementById("slider").value = replayIndex;
-
+function play(){
+    if(!playing) return;
+    replayIndex=(replayIndex+1)%historyFiles.length;
+    document.getElementById("slider").value=replayIndex;
     loadReplay();
-
-    setTimeout(play, 800);
+    setTimeout(play,800);
 }
+
+// EXPORT
+document.getElementById("exportBtn").onclick=()=>{
+    const link=document.createElement("a");
+    link.download="map.png";
+    link.href=canvas.toDataURL();
+    link.click();
+};
+
+// WYKRES ŚWIATA
+async function loadChart(){
+    const files=await fetch(`/api/history/${currentWorld}`).then(r=>r.json());
+
+    const labels=[],values=[];
+
+    for(let f of files){
+        const data=await fetch(`/api/history/${currentWorld}/${f}`).then(r=>r.json());
+        const sum=data.reduce((s,p)=>s+p.points,0);
+        labels.push(f);
+        values.push(sum);
+    }
+
+    if(chart) chart.destroy();
+
+    chart=new Chart(document.getElementById("chart"),{
+        type:"line",
+        data:{labels,datasets:[{label:"Punkty świata",data:values}]}
+    });
+}
+
+// WYKRES PLEMION 🔥
+async function loadTribeChart(){
+    const files=await fetch(`/api/history/${currentWorld}`).then(r=>r.json());
+
+    const tribeData={};
+
+    for(let f of files){
+        const data=await fetch(`/api/history/${currentWorld}/${f}`).then(r=>r.json());
+
+        const tribes={};
+
+        data.forEach(p=>{
+            if(!tribes[p.tribe]) tribes[p.tribe]=0;
+            tribes[p.tribe]+=p.points;
+        });
+
+        Object.entries(tribes)
+            .sort((a,b)=>b[1]-a[1])
+            .slice(0,5)
+            .forEach(([t,points])=>{
+                if(!tribeData[t]) tribeData[t]=[];
+                tribeData[t].push(points);
+            });
+    }
+
+    const datasets=Object.keys(tribeData).map(t=>({
+        label:t,
+        data:tribeData[t],
+        borderColor:getColor(t),
+        fill:false
+    }));
+
+    if(tribeChart) tribeChart.destroy();
+
+    tribeChart=new Chart(document.getElementById("tribeChart"),{
+        type:"line",
+        data:{labels:files,datasets}
+    });
+}
+
+// START
+loadWorld();
