@@ -8,21 +8,23 @@ const PORT = process.env.PORT || 3000;
 let tribes = [];
 let players = [];
 
-// 🎨 bardziej "mapowe" kolory
-const palette = [
-  "#e6194b","#3cb44b","#ffe119","#4363d8","#f58231",
-  "#911eb4","#46f0f0","#f032e6","#bcf60c","#fabebe"
-];
+// 🔥 RĘCZNE KOLORY (jak mapa — możesz zmieniać)
+const tribeColors = {
+  "VIP":"#ff0000",
+  "VIP2":"#ff3333",
+  "ZD":"#00ff22",
+  "KMIC":"#1100ff",
+  "R":"#ff6a00",
+  "FER":"#55499c"
+};
 
-function getColor(id){
-  return palette[id % palette.length];
-}
-
+// UTF
 async function getUTF(url){
   const res = await axios.get(url,{responseType:"arraybuffer"});
   return Buffer.from(res.data,"binary").toString("utf8");
 }
 
+// LOAD
 async function loadMap(){
   try{
     const ally = await getUTF("https://pl224.plemiona.pl/map/ally.txt");
@@ -30,13 +32,15 @@ async function loadMap(){
     tribes = ally.split("\n").map(line=>{
       const [id,name,tag,members,villages,points] = line.split(",");
 
+      const cleanTag = decodeURIComponent((tag||"").replace(/\+/g," "));
+
       return {
         id,
-        tag: decodeURIComponent((tag||"").replace(/\+/g," ")),
+        tag: cleanTag,
         members:+members||0,
         villages:+villages||0,
         points:+points||0,
-        color:getColor(id)
+        color: tribeColors[cleanTag] || "#888"
       };
     });
 
@@ -77,6 +81,7 @@ app.get("/api/players",(req,res)=>{
   res.json(players.sort((a,b)=>b.points-a.points));
 });
 
+// 🔥 członkowie plemienia
 app.get("/api/tribe/:id",(req,res)=>{
   res.json(players.filter(p=>p.tribeId==req.params.id));
 });
