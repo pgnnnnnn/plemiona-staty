@@ -7,20 +7,11 @@
 </head>
 <body>
 
-<div class="nav">
-  <div class="logo">STATY 224</div>
-  <div>
-    <a href="/">Home</a>
-  </div>
-</div>
+<div class="container panel">
 
-<div class="container">
+<h1>Plemiona</h1>
 
-<div class="panel">
-
-<h1>Ranking plemion</h1>
-
-<input class="search" id="search" placeholder="Szukaj..." onkeyup="render()">
+<input id="search" placeholder="Szukaj plemienia...">
 
 <table>
 <thead>
@@ -37,8 +28,6 @@
 
 </div>
 
-</div>
-
 <script>
 let data=[];
 
@@ -48,26 +37,24 @@ async function init(){
   render();
 }
 
+document.getElementById("search").addEventListener("input", render);
+
 function render(){
   const q = document.getElementById("search").value.toLowerCase();
-  let i = 1;
+
+  let i=1;
 
   document.getElementById("t").innerHTML =
-  data.filter(x=>x.tag.toLowerCase().includes(q))
-  .slice(0,300)
+  data.filter(x=> (x.tag||"").toLowerCase().includes(q))
+  .slice(0,200)
   .map(x=>`
-    <tr onclick="go(${x.id})">
-      <td>${i++}</td>
-      <td>${x.tag}</td>
-      <td>${x.points}</td>
-      <td>${x.villages}</td>
-      <td>${x.members}</td>
-    </tr>
-  `).join("");
-}
-
-function go(id){
-  location.href="/tribe.html?id="+id;
+  <tr>
+    <td>${i++}</td>
+    <td>${x.tag}</td>
+    <td>${x.points}</td>
+    <td>${x.villages}</td>
+    <td>${x.members}</td>
+  </tr>`).join("");
 }
 
 init();
