@@ -9,7 +9,7 @@
 
 <div class="container panel">
 
-<h1>Ranking graczy</h1>
+<h1>Gracze</h1>
 
 <input id="search" placeholder="Szukaj...">
 
@@ -28,14 +28,11 @@
 </div>
 
 <script>
-let data = [];
+let data=[];
 
 async function init(){
-  const res = await fetch("/players.json");
+  const res = await fetch("/api/players");
   data = await res.json();
-
-  data.sort((a,b)=>b.points-a.points);
-
   render();
 }
 
@@ -50,13 +47,12 @@ function render(){
   data.filter(x => (x.name||"").toLowerCase().includes(q))
   .slice(0,300)
   .map(x=>`
-    <tr>
-      <td>${i++}</td>
-      <td>${x.name}</td>
-      <td>${x.points}</td>
-      <td>${x.villages}</td>
-    </tr>
-  `).join("");
+  <tr>
+    <td>${i++}</td>
+    <td>${x.name}</td>
+    <td>${x.points}</td>
+    <td>${x.villages}</td>
+  </tr>`).join("");
 }
 
 init();
