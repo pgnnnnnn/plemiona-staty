@@ -2,17 +2,38 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard</title>
+<title>Staty PRO</title>
 <link rel="stylesheet" href="style.css">
 
 <style>
-.big-table { width:100%; border-collapse:collapse; }
-.big-table th { background:#1f1f1f; padding:10px; font-size:12px; }
-.big-table td { padding:8px; border-bottom:1px solid #1a1a1a; text-align:center; }
-.big-table tr:hover { background:#222; }
+.section {
+  margin-bottom:20px;
+  background:#151515;
+  padding:15px;
+  border-radius:10px;
+}
 
-.green { color:#2ecc71; }
-.red { color:#e74c3c; }
+.blue { border-left:5px solid #3498db; }
+.green { border-left:5px solid #2ecc71; }
+
+.big-table {
+  width:100%;
+  border-collapse:collapse;
+}
+
+.big-table th {
+  background:#1f1f1f;
+  padding:8px;
+}
+
+.big-table td {
+  padding:6px;
+  text-align:center;
+  border-bottom:1px solid #1a1a1a;
+}
+
+.pos { color:#2ecc71; }
+.neg { color:#e74c3c; }
 </style>
 
 </head>
@@ -20,61 +41,100 @@
 
 <div class="layout">
 
-<div class="sidebar" id="sidebar">
-  <div class="toggle" onclick="toggle()">☰</div>
+<div class="sidebar">
   <div class="logo">STATY</div>
 </div>
 
 <div class="content">
 
-<div class="panel">
+<h1>Statystyki świata</h1>
 
-<h1>Ranking Rodzin</h1>
+<!-- 🔵 PRZYROST -->
+<div class="section blue">
+<h2>📈 Przyrost punktów</h2>
+<table class="big-table">
+<thead>
+<tr>
+<th>#</th>
+<th>Plemie</th>
+<th>Przyrost</th>
+</tr>
+</thead>
+<tbody id="gain"></tbody>
+</table>
+</div>
 
+<!-- 🟢 DOMINACJA -->
+<div class="section green">
+<h2>🌍 Dominacja świata</h2>
+<table class="big-table">
+<thead>
+<tr>
+<th>#</th>
+<th>Plemie</th>
+<th>%</th>
+</tr>
+</thead>
+<tbody id="dom"></tbody>
+</table>
+</div>
+
+<!-- 📊 RANKING -->
+<div class="section">
+<h2>🏆 Ranking</h2>
 <table class="big-table">
 <thead>
 <tr>
 <th>#</th>
 <th>Plemie</th>
 <th>Punkty</th>
-<th>Δ Punkty</th>
+<th>Gracze</th>
 <th>Wioski</th>
-<th>Δ Wioski</th>
 </tr>
 </thead>
-<tbody id="t"></tbody>
+<tbody id="main"></tbody>
 </table>
-
 </div>
 
 </div>
-
 </div>
 
 <script>
-function toggle(){
-  document.getElementById("sidebar").classList.toggle("collapsed");
-}
-
 async function load(){
   const res = await fetch("/api/dashboard");
   const data = await res.json();
 
-  let i=1;
-
-  document.getElementById("t").innerHTML =
-  data.map(x=>`
+  // 🔵 GAIN
+  document.getElementById("gain").innerHTML =
+  data.map((x,i)=>`
     <tr>
-      <td>${i++}</td>
+      <td>${i+1}</td>
+      <td style="color:${x.color}">${x.tag}</td>
+      <td class="${x.gain>=0?'pos':'neg'}">
+        ${x.gain>=0?'+':''}${x.gain.toLocaleString()}
+      </td>
+    </tr>
+  `).join("");
+
+  // 🟢 DOM
+  document.getElementById("dom").innerHTML =
+  data.map((x,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td style="color:${x.color}">${x.tag}</td>
+      <td>${x.dom}%</td>
+    </tr>
+  `).join("");
+
+  // 📊 MAIN
+  document.getElementById("main").innerHTML =
+  data.map((x,i)=>`
+    <tr>
+      <td>${i+1}</td>
       <td style="color:${x.color}">${x.tag}</td>
       <td>${x.points.toLocaleString()}</td>
-      <td class="${x.gain.points>=0?'green':'red'}">
-        ${x.gain.points>=0?'+':''}${x.gain.points.toLocaleString()}
-      </td>
+      <td>${x.members}</td>
       <td>${x.villages}</td>
-      <td class="${x.gain.villages>=0?'green':'red'}">
-        ${x.gain.villages>=0?'+':''}${x.gain.villages}
-      </td>
     </tr>
   `).join("");
 }
