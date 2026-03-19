@@ -8,23 +8,30 @@ const PORT = process.env.PORT || 3000;
 let tribes = [];
 let players = [];
 
-// 🎨 KOLORY Z MAPY (dopasowane do Twojego screena)
+// 🎨 ROZSZERZONE KOLORY PLEMION (możesz dopisywać kolejne)
 const tribeColors = {
-  "AMA":"#ff9900",
+  "AMA":"#ff8000",
+  "AMA!":"#ff8000",
+  "AMA$":"#ff8000",
+  "AMA.":"#ff8000",
+
   "FF":"#00e5ff",
-  "AK":"#0033ff",
-  "AKII":"#0000cc",
-  "AFMA":"#ff9900",
-  "OF":"#00ccff",
+  "FF.":"#00e5ff",
+  "FF..":"#00e5ff",
+  "FF:":"#00e5ff",
+
+  "AK":"#0033ff"",
+  "AK!":"#0033ff"",
+  "AK!!":"#0033ff"",
+  "AK!!!":"#0033ff"",
+
+  "OB!":"#ff0000",
   "OB":"#ff0000",
-  "OBJ":"#ff0000",
-  "AMA!":"#00e5ff",
-  "AMAS":"#ff9900",
-  "AK!":"#0000ff",
-  "AK!!!":"#0000cc"
+  "OB?":"#ff0000",
+
 };
 
-// UTF FIX
+// UTF
 async function getUTF(url){
   const res = await axios.get(url,{responseType:"arraybuffer"});
   return Buffer.from(res.data,"binary").toString("utf8");
