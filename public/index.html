@@ -17,6 +17,12 @@
   background:#1a1a1a;
   padding:15px;
   border-radius:10px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.card:hover {
+  background:#222;
 }
 
 .card h3 {
@@ -51,14 +57,15 @@
 
 <div class="container">
 
-<!-- 🔥 STATY -->
+<!-- 🔥 STATY (KLIKALNE) -->
 <div class="grid">
-  <div class="card">
+
+  <div class="card" onclick="go('/players.html')">
     <h3>Gracze</h3>
     <div class="big" id="players"></div>
   </div>
 
-  <div class="card">
+  <div class="card" onclick="go('/tribes.html')">
     <h3>Plemiona</h3>
     <div class="big" id="tribes"></div>
   </div>
@@ -67,17 +74,18 @@
     <h3>Punkty świata</h3>
     <div class="big" id="points"></div>
   </div>
+
 </div>
 
 <!-- 🔥 TOPKI -->
 <div class="grid">
 
-  <div class="card">
+  <div class="card" onclick="go('/players.html')">
     <h3>TOP 5 Graczy</h3>
     <div class="list" id="topPlayers"></div>
   </div>
 
-  <div class="card">
+  <div class="card" onclick="go('/tribes.html')">
     <h3>TOP 5 Plemion</h3>
     <div class="list" id="topTribes"></div>
   </div>
@@ -87,6 +95,10 @@
 </div>
 
 <script>
+function go(url){
+  location.href = url;
+}
+
 async function load(){
 
   const [pRes, tRes] = await Promise.all([
@@ -97,14 +109,14 @@ async function load(){
   const players = await pRes.json();
   const tribes = await tRes.json();
 
-  // 🔢 liczby
+  // liczby
   document.getElementById("players").innerText = players.length;
   document.getElementById("tribes").innerText = tribes.length;
 
   const totalPoints = players.reduce((a,b)=>a+b.points,0);
   document.getElementById("points").innerText = totalPoints.toLocaleString();
 
-  // 🏆 top gracze
+  // top gracze
   const topP = [...players]
     .sort((a,b)=>b.points-a.points)
     .slice(0,5);
@@ -117,7 +129,7 @@ async function load(){
       </div>
     `).join("");
 
-  // 🏆 top plemiona
+  // top plemiona
   const topT = [...tribes]
     .sort((a,b)=>b.points-a.points)
     .slice(0,5);
