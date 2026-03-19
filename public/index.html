@@ -2,8 +2,46 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Statystyki 224</title>
+<title>Staty 224</title>
 <link rel="stylesheet" href="style.css">
+
+<style>
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:15px;
+  margin-bottom:25px;
+}
+
+.card {
+  background:#1a1a1a;
+  padding:15px;
+  border-radius:10px;
+}
+
+.card h3 {
+  margin:0;
+  font-size:14px;
+  color:#888;
+}
+
+.big {
+  font-size:24px;
+  margin-top:5px;
+}
+
+.list {
+  margin-top:10px;
+}
+
+.item {
+  display:flex;
+  justify-content:space-between;
+  padding:5px 0;
+  border-bottom:1px solid #222;
+}
+</style>
+
 </head>
 <body>
 
@@ -13,32 +51,88 @@
 
 <div class="container">
 
+<!-- 🔥 STATY -->
+<div class="grid">
+  <div class="card">
+    <h3>Gracze</h3>
+    <div class="big" id="players"></div>
+  </div>
+
+  <div class="card">
+    <h3>Plemiona</h3>
+    <div class="big" id="tribes"></div>
+  </div>
+
+  <div class="card">
+    <h3>Punkty świata</h3>
+    <div class="big" id="points"></div>
+  </div>
+</div>
+
+<!-- 🔥 TOPKI -->
 <div class="grid">
 
-<div class="card">
-<a href="/tribes.html">
-<h2>Plemiona</h2>
-<p class="muted">Ranking plemion</p>
-</a>
-</div>
+  <div class="card">
+    <h3>TOP 5 Graczy</h3>
+    <div class="list" id="topPlayers"></div>
+  </div>
 
-<div class="card">
-<a href="/players.html">
-<h2>Gracze</h2>
-<p class="muted">Ranking graczy</p>
-</a>
-</div>
-
-<div class="card">
-<a href="/map.html">
-<h2>Mapa</h2>
-<p class="muted">Podgląd świata</p>
-</a>
-</div>
+  <div class="card">
+    <h3>TOP 5 Plemion</h3>
+    <div class="list" id="topTribes"></div>
+  </div>
 
 </div>
 
 </div>
+
+<script>
+async function load(){
+
+  const [pRes, tRes] = await Promise.all([
+    fetch("/api/players"),
+    fetch("/api/tribes")
+  ]);
+
+  const players = await pRes.json();
+  const tribes = await tRes.json();
+
+  // 🔢 liczby
+  document.getElementById("players").innerText = players.length;
+  document.getElementById("tribes").innerText = tribes.length;
+
+  const totalPoints = players.reduce((a,b)=>a+b.points,0);
+  document.getElementById("points").innerText = totalPoints.toLocaleString();
+
+  // 🏆 top gracze
+  const topP = [...players]
+    .sort((a,b)=>b.points-a.points)
+    .slice(0,5);
+
+  document.getElementById("topPlayers").innerHTML =
+    topP.map(x=>`
+      <div class="item">
+        <span>${x.name}</span>
+        <span>${x.points}</span>
+      </div>
+    `).join("");
+
+  // 🏆 top plemiona
+  const topT = [...tribes]
+    .sort((a,b)=>b.points-a.points)
+    .slice(0,5);
+
+  document.getElementById("topTribes").innerHTML =
+    topT.map(x=>`
+      <div class="item">
+        <span style="color:${x.color}">${x.tag}</span>
+        <span>${x.points}</span>
+      </div>
+    `).join("");
+}
+
+load();
+</script>
 
 </body>
 </html>
