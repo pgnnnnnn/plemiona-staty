@@ -1,5 +1,6 @@
 const express = require("express");
 const axios = require("axios");
+const fs = require("fs");
 const path = require("path");
 
 const app = express();
@@ -7,18 +8,16 @@ const PORT = process.env.PORT || 3000;
 
 let tribes = [];
 let players = [];
+let history = {}; // historia punktów
 
-// 🔄 UPDATE DATA
+// 🔄 UPDATE
 async function updateData() {
   try {
-    console.log("Update...");
-
     const ally = await axios.get("https://pl224.plemiona.pl/map/ally.txt");
     tribes = ally.data.split("\n").map(line => {
       const [id, name, tag, members, villages, points] = line.split(",");
       return {
         id,
-        name,
         tag,
         members: Number(members),
         villages: Number(villages),
@@ -26,22 +25,30 @@ async function updateData() {
       };
     });
 
-    const player = await axios.get("https://pl224.plemiona.pl/map/player.txt");
-    players = player.data.split("\n").map(line => {
-      const [id, name, tribe, villages, points] = line.split(",");
-      return {
-        id,
-        name,
-        tribe,
-        villages: Number(villages),
-        points: Number(points)
-      };
+    const now = Date.now();
+
+    // zapis historii
+    tribes.forEach(t => {
+      if (!history[t.id]) history[t.id] = [];
+      history[t.id].push({ time: now, points: t.points });
+
+      // max 50 wpisów (lekka baza)
+      if (history[t.id].length > 50) {
+        history[t.id].shift();
+      }
     });
 
-    console.log("OK");
+    fs.writeFileSync("history.json", JSON.stringify(history));
+
+    console.log("UPDATE OK");
   } catch (e) {
     console.log("ERR:", e.message);
   }
+}
+
+// wczytaj historię przy starcie
+if (fs.existsSync("history.json")) {
+  history = JSON.parse(fs.readFileSync("history.json"));
 }
 
 updateData();
@@ -55,15 +62,16 @@ app.get("/api/tribes", (req, res) => {
   res.json(tribes.sort((a,b)=>b.points-a.points));
 });
 
-// API SZCZEGÓŁY PLEMIONA
+// API SZCZEGÓŁ + HISTORIA
 app.get("/api/tribe/:id", (req, res) => {
   const id = req.params.id;
-
   const tribe = tribes.find(t => t.id == id);
-  const members = players.filter(p => p.tribe == id)
-    .sort((a,b)=>b.points-a.points);
+  const hist = history[id] || [];
 
-  res.json({ tribe, members });
+  res.json({
+    tribe,
+    history: hist
+  });
 });
 
 app.listen(PORT, () => console.log("Server działa"));
