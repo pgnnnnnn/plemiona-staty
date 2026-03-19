@@ -125,9 +125,11 @@ app.get("/api/players", (req,res)=>{
 
 // Ręczne odświeżenie danych
 app.get("/update", async (req,res)=>{
-  await fetchTribes();
-  await fetchPlayers();
-  res.json({message:"Zaktualizowano dane"});
+  try {
+    await fetchTribes();
+    await fetchPlayers();
+    res.json({message:"Zaktualizowano dane"});
+  } catch (err) {
+    res.status(500).json({error: err.message});
+  }
 });
-
-app.listen(PORT,()=>console.log(`Server działa na porcie ${PORT}`));
