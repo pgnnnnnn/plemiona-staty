@@ -1,127 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Statystyki Świata 224</title>
-<link rel="stylesheet" href="style.css">
+<title>Mapa Świata 224</title>
+<style>
+  html, body {
+    margin:0;
+    padding:0;
+    height:100%;
+    background:#111;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+  }
+  iframe {
+    width:100%;
+    height:100%;
+    border:none;
+  }
+</style>
 </head>
 <body>
 
-<h1>Świat 224 — Statystyki</h1>
-<button onclick="update()">Aktualizuj Wszystko</button>
-
-<h2>Top 25 Plemion</h2>
-<table id="tribes-table">
-<thead>
-<tr>
-<th>#</th>
-<th>Plemie</th>
-<th>Punkty</th>
-<th>Wioski</th>
-<th>Członkowie</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-
-<h2>Top 25 Graczy</h2>
-<table id="players-table">
-<thead>
-<tr>
-<th>#</th>
-<th>Gracz</th>
-<th>Punkty</th>
-<th>Wioski</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-
-<h2>Mapa Świata 224</h2>
-<canvas id="map" width="800" height="800" style="display:block;margin:0 auto;border:1px solid #444;"></canvas>
+<iframe id="mapFrame" src="https://pl224.tribalwarsmap.com/pl/69bc0daa3ffb1"></iframe>
 
 <script>
-async function loadTribes(){
-  const res = await fetch("/api/tribes");
-  const data = await res.json();
-  const tbody = document.querySelector("#tribes-table tbody");
-  tbody.innerHTML = "";
-  data.forEach((t, index)=>{
-    let color="";
-    if(index===0) color="gold";
-    else if(index===1) color="silver";
-    else if(index===2) color="orange";
-    tbody.innerHTML += `<tr style="background-color:${color};">
-      <td>${index+1}</td>
-      <td>${t.name}</td>
-      <td>${t.points}</td>
-      <td>${t.villages}</td>
-      <td>${t.members}</td>
-    </tr>`;
-  });
-}
-
-async function loadPlayers(){
-  const res = await fetch("/api/players");
-  const data = await res.json();
-  const tbody = document.querySelector("#players-table tbody");
-  tbody.innerHTML = "";
-  data.forEach((p,index)=>{
-    tbody.innerHTML += `<tr>
-      <td>${index+1}</td>
-      <td>${p.name}</td>
-      <td>${p.points}</td>
-      <td>${p.villages}</td>
-    </tr>`;
-  });
-}
-
-async function loadMap(){
-  const res = await fetch("/api/map");
-  const data = await res.json();
-  const canvas = document.getElementById("map");
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#111";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-
-  const playersLines = data.players.split("\n");
-  const alliesLines = data.allies.split("\n");
-
-  const alliesMap = {};
-  alliesLines.forEach(line=>{
-    if(!line) return;
-    const [id,name,tag,members,villages,points] = line.split(",");
-    alliesMap[id] = tag.replace(/%/g,"");
-  });
-
-  playersLines.forEach(line=>{
-    if(!line) return;
-    const [id,name,tribe,x,y,points,villages] = line.split(",");
-    if(!x || !y) return;
-    let color = "white";
-    if(tribe && alliesMap[tribe]){
-      let hash=0;
-      for(let i=0;i<alliesMap[tribe].length;i++) hash+=alliesMap[tribe].charCodeAt(i);
-      const r=(hash*37)%255;
-      const g=(hash*73)%255;
-      const b=(hash*109)%255;
-      color=`rgb(${r},${g},${b})`;
-    }
-    ctx.fillStyle=color;
-    ctx.fillRect(parseInt(x)/2,parseInt(y)/2,2,2);
-  });
-}
-
-async function update(){
-  await fetch("/update");
-  await loadTribes();
-  await loadPlayers();
-  await loadMap();
-}
-
-loadTribes();
-loadPlayers();
-loadMap();
+  // Funkcja automatycznego odświeżania co 5 minut (300000 ms)
+  setInterval(() => {
+    const iframe = document.getElementById("mapFrame");
+    iframe.src = iframe.src;
+  }, 300000);
 </script>
 
 </body>
