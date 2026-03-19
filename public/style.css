@@ -1,9 +1,7 @@
 body {
-  background:#0f0f0f;
+  background:#111;
   color:#fff;
   font-family:Arial;
-  margin:0;
-  padding:20px;
 }
 
 .container {
@@ -20,16 +18,10 @@ body {
 table {
   width:100%;
   border-collapse:collapse;
-  margin-top:20px;
 }
 
-th,td {
-  padding:10px;
+td,th {
+  padding:8px;
   border-bottom:1px solid #333;
   text-align:center;
-}
-
-button {
-  padding:10px;
-  margin:10px 0;
 }
