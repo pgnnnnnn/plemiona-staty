@@ -1,80 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
 <meta charset="UTF-8">
 <title>Plemie</title>
 <link rel="stylesheet" href="style.css">
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 </head>
 <body>
 
-<div class="nav">
-  <div class="logo">STATY 224</div>
-  <div>
-    <a href="/tribes.html">← Powrót</a>
-  </div>
-</div>
-
-<div class="container">
-
-<div class="panel">
+<div class="container panel">
 
 <h1 id="name"></h1>
 
-<p id="gain" class="muted"></p>
-
-<canvas id="chart"></canvas>
-
-</div>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Nick</th>
+<th>Punkty</th>
+<th>Wioski</th>
+</tr>
+</thead>
+<tbody id="t"></tbody>
+</table>
 
 </div>
 
 <script>
-const id = new URLSearchParams(location.search).get("id");
+const id=new URLSearchParams(location.search).get("id");
 
 async function load(){
-  const res = await fetch("/api/tribe/"+id);
-  const data = await res.json();
+  const res=await fetch("/api/tribe/"+id);
+  const data=await res.json();
 
-  document.getElementById("name").innerText = data.tribe.tag;
-
-  // 🔥 LICZENIE GAIN
-  if (data.history.length > 1) {
-    const first = data.history[0].points;
-    const last = data.history[data.history.length-1].points;
-    const gain = last - first;
-
-    document.getElementById("gain").innerText =
-      "Przyrost: +" + gain + " pkt";
+  if(data.length){
+    document.getElementById("name").innerText="Plemie: "+data[0].tribe;
   }
 
-  // 📊 WYKRES
-  const labels = data.history.map(x => {
-    const d = new Date(x.time);
-    return d.getHours() + ":" + d.getMinutes();
-  });
+  let i=1;
 
-  const points = data.history.map(x => x.points);
-
-  new Chart(document.getElementById("chart"), {
-    type: "line",
-    data: {
-      labels: labels,
-      datasets: [{
-        label: "Punkty",
-        data: points
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display:false }
-      }
-    }
-  });
+  document.getElementById("t").innerHTML =
+  data.map(x=>`
+    <tr>
+      <td>${i++}</td>
+      <td>${x.name}</td>
+      <td>${x.points}</td>
+      <td>${x.villages}</td>
+    </tr>
+  `).join("");
 }
 
 load();
