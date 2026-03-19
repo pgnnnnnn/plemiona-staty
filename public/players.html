@@ -9,26 +9,22 @@
 
 <div class="layout">
 
-<!-- 🔥 SIDEBAR -->
 <div class="sidebar" id="sidebar">
-
   <div class="toggle" onclick="toggle()">☰</div>
-
   <div class="logo">STATY</div>
 
   <div class="menu">
-    <a href="/"><span class="icon">🏠</span><span class="text">Dashboard</span></a>
-    <a href="/players.html" class="active"><span class="icon">👤</span><span class="text">Gracze</span></a>
-    <a href="/tribes.html"><span class="icon">⚔️</span><span class="text">Plemiona</span></a>
-    <a href="/map.html"><span class="icon">🗺️</span><span class="text">Mapa</span></a>
+    <a href="/" data-tip="Dashboard">🏠 <span class="text">Dashboard</span></a>
+    <a href="/players.html" class="active" data-tip="Gracze">👤 <span class="text">Gracze</span></a>
+    <a href="/tribes.html" data-tip="Plemiona">⚔️ <span class="text">Plemiona</span></a>
   </div>
-
 </div>
 
-<!-- 🔥 CONTENT -->
 <div class="content">
 
 <div class="panel">
+
+<div class="back" onclick="history.back()">← Powrót</div>
 
 <h1>Gracze</h1>
 
@@ -54,12 +50,18 @@
 </div>
 
 <script>
-// 🔥 sidebar toggle
 function toggle(){
-  document.getElementById("sidebar").classList.toggle("collapsed");
+  const s=document.getElementById("sidebar");
+  s.classList.toggle("collapsed");
+  localStorage.setItem("sidebar", s.classList.contains("collapsed"));
 }
 
-// 🔥 tabela
+window.onload=()=>{
+  if(localStorage.getItem("sidebar")==="true"){
+    document.getElementById("sidebar").classList.add("collapsed");
+  }
+};
+
 let data=[];
 let sortKey="points";
 let asc=false;
@@ -70,13 +72,8 @@ async function init(){
   render();
 }
 
-function sortBy(key){
-  if(sortKey===key){
-    asc=!asc;
-  } else {
-    sortKey=key;
-    asc=false;
-  }
+function sortBy(k){
+  if(sortKey===k){ asc=!asc; } else { sortKey=k; asc=false; }
   render();
 }
 
@@ -86,15 +83,10 @@ function render(){
   const q=document.getElementById("search").value.toLowerCase();
 
   let list=[...data]
-  .filter(x =>
-    x.name.toLowerCase().includes(q) ||
-    (x.tribe||"").toLowerCase().includes(q)
-  )
+  .filter(x=>x.name.toLowerCase().includes(q)||(x.tribe||"").toLowerCase().includes(q))
   .sort((a,b)=>{
-    if(sortKey==="name" || sortKey==="tribe"){
-      return asc
-        ? (a[sortKey]||"").localeCompare(b[sortKey]||"")
-        : (b[sortKey]||"").localeCompare(a[sortKey]||"");
+    if(sortKey==="name"||sortKey==="tribe"){
+      return asc ? a[sortKey].localeCompare(b[sortKey]) : b[sortKey].localeCompare(a[sortKey]);
     }
     return asc ? a[sortKey]-b[sortKey] : b[sortKey]-a[sortKey];
   });
@@ -108,9 +100,7 @@ function render(){
       <td>${x.name}</td>
       <td>${x.points}</td>
       <td>${x.villages}</td>
-      <td onclick="go(${x.tribeId})" style="color:${x.color};cursor:pointer">
-        ${x.tribe}
-      </td>
+      <td onclick="go(${x.tribeId})" style="color:${x.color};cursor:pointer">${x.tribe}</td>
     </tr>
   `).join("");
 }
