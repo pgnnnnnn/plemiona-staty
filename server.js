@@ -8,16 +8,24 @@ const PORT = process.env.PORT || 3000;
 let tribes = [];
 let players = [];
 
-// 🔥 UTF + poprawne kodowanie
-async function getUTF(url){
-  const res = await axios.get(url, {
-    responseType: "arraybuffer"
-  });
+// 🎨 kolory plemion (losowe ale stałe)
+const tribeColors = {};
 
-  return Buffer.from(res.data, "binary").toString("utf8");
+function getColor(id){
+  if(!tribeColors[id]){
+    const colors = ["#ff4d4d","#4da6ff","#4dff88","#ffd24d","#b84dff","#ff884d"];
+    tribeColors[id] = colors[id % colors.length];
+  }
+  return tribeColors[id];
 }
 
-// 🔄 LOAD MAP
+// UTF
+async function getUTF(url){
+  const res = await axios.get(url, { responseType:"arraybuffer" });
+  return Buffer.from(res.data,"binary").toString("utf8");
+}
+
+// LOAD
 async function loadMap(){
   try{
     const allyData = await getUTF("https://pl224.plemiona.pl/map/ally.txt");
@@ -27,11 +35,12 @@ async function loadMap(){
 
       return {
         id,
-        name: decodeURIComponent((name || "").replace(/\+/g," ")),
-        tag: decodeURIComponent((tag || "").replace(/\+/g," ")),
-        members: +members || 0,
-        villages: +villages || 0,
-        points: +points || 0
+        name: decodeURIComponent((name||"").replace(/\+/g," ")),
+        tag: decodeURIComponent((tag||"").replace(/\+/g," ")),
+        members:+members||0,
+        villages:+villages||0,
+        points:+points||0,
+        color:getColor(id)
       };
     });
 
@@ -40,26 +49,27 @@ async function loadMap(){
     players = playerData.split("\n").map(line=>{
       const [id,name,tribe,villages,points] = line.split(",");
 
-      const tribeObj = tribes.find(t => t.id == tribe);
+      const t = tribes.find(x=>x.id==tribe);
 
       return {
         id,
-        name: decodeURIComponent((name || "").replace(/\+/g," ")),
-        tribe: tribeObj ? tribeObj.tag : "",
-        villages: +villages || 0,
-        points: +points || 0
+        name: decodeURIComponent((name||"").replace(/\+/g," ")),
+        tribeId: tribe,
+        tribe: t ? t.tag : "",
+        color: t ? t.color : "#888",
+        villages:+villages||0,
+        points:+points||0
       };
     });
 
     console.log("MAP OK");
   }catch(e){
-    console.log("MAP ERR:", e.message);
+    console.log("ERR:",e.message);
   }
 }
 
-// START
 loadMap();
-setInterval(loadMap, 1000 * 60 * 5);
+setInterval(loadMap,1000*60*5);
 
 // STATIC
 app.use(express.static(path.join(__dirname,"public")));
@@ -71,6 +81,12 @@ app.get("/api/tribes",(req,res)=>{
 
 app.get("/api/players",(req,res)=>{
   res.json(players.sort((a,b)=>b.points-a.points));
+});
+
+// 🔥 gracze plemienia
+app.get("/api/tribe/:id",(req,res)=>{
+  const id = req.params.id;
+  res.json(players.filter(p=>p.tribeId==id));
 });
 
 app.listen(PORT,()=>console.log("Server działa"));
