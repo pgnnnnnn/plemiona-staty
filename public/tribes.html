@@ -7,11 +7,20 @@
 </head>
 <body>
 
-<div class="container panel">
+<div class="nav">
+  <div class="logo">STATY 224</div>
+  <div>
+    <a href="/">Home</a>
+  </div>
+</div>
 
-<h1>Ranking Plemion</h1>
+<div class="container">
 
-<input id="search" placeholder="Szukaj plemienia..." onkeyup="load()">
+<div class="panel">
+
+<h1>Ranking plemion</h1>
+
+<input class="search" id="search" placeholder="Szukaj..." onkeyup="render()">
 
 <table>
 <thead>
@@ -28,25 +37,26 @@
 
 </div>
 
+</div>
+
 <script>
-let data = [];
+let data=[];
 
 async function init(){
   const res = await fetch("/api/tribes");
   data = await res.json();
-  load();
+  render();
 }
 
-function load(){
+function render(){
   const q = document.getElementById("search").value.toLowerCase();
   let i = 1;
 
   document.getElementById("t").innerHTML =
-  data
-  .filter(x => x.tag.toLowerCase().includes(q))
-  .slice(0,200)
+  data.filter(x=>x.tag.toLowerCase().includes(q))
+  .slice(0,300)
   .map(x=>`
-    <tr onclick="openTribe(${x.id})" style="cursor:pointer">
+    <tr onclick="go(${x.id})">
       <td>${i++}</td>
       <td>${x.tag}</td>
       <td>${x.points}</td>
@@ -56,8 +66,8 @@ function load(){
   `).join("");
 }
 
-function openTribe(id){
-  window.location = "/tribe.html?id=" + id;
+function go(id){
+  location.href="/tribe.html?id="+id;
 }
 
 init();
