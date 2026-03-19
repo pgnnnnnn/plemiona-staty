@@ -21,15 +21,24 @@
 </div>
 
 <div class="content">
+
 <div class="panel">
+
 <h1>Dashboard</h1>
+
+<div id="timer" class="timer"></div>
+<div class="refresh" onclick="manualRefresh()">↻ Odśwież teraz</div>
+
 <div id="stats"></div>
+
 </div>
+
 </div>
 
 </div>
 
 <script>
+// sidebar
 function toggle(){
   const s=document.getElementById("sidebar");
   s.classList.toggle("collapsed");
@@ -42,7 +51,8 @@ window.onload=()=>{
   }
 };
 
-async function load(){
+// data
+async function init(){
   const [p,t]=await Promise.all([
     fetch("/api/players"),
     fetch("/api/tribes")
@@ -56,7 +66,47 @@ async function load(){
     Plemiona: ${tribes.length}
   `;
 }
-load();
+
+// 🔥 LIVE UPDATE
+let refreshTime=300;
+let current=refreshTime;
+let timerInterval;
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    current--;
+    document.getElementById("timer").innerText="Odświeżanie za: "+current+"s";
+
+    if(current<=0){
+      current=refreshTime;
+      reloadData();
+      showRefresh();
+    }
+  },1000);
+}
+
+async function reloadData(){
+  await init();
+}
+
+function manualRefresh(){
+  current=refreshTime;
+  reloadData();
+  showRefresh();
+}
+
+function showRefresh(){
+  const el=document.getElementById("timer");
+  el.innerText="✔ Odświeżono";
+  setTimeout(()=>{
+    el.innerText="Odświeżanie za: "+current+"s";
+  },1500);
+}
+
+// start
+init();
+startTimer();
 </script>
 
 </body>
