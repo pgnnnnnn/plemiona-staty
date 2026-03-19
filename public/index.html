@@ -9,36 +9,45 @@
 
 <h1>🔥 Staty PRO MAX</h1>
 
-<select id="worldSelect">
-    <option value="pl224">pl224</option>
-    <option value="pl226">pl226</option>
-</select>
+<div class="top-bar">
+    <select id="worldSelect">
+        <option value="pl224">pl224</option>
+        <option value="pl226">pl226</option>
+    </select>
 
-<div class="replay">
-    <button id="playBtn">▶️ Play</button>
-    <button id="exportBtn">📸 Export</button>
+    <button id="playBtn">▶️</button>
+    <button id="exportBtn">📸</button>
+
     <input type="range" id="slider">
     <span id="dateLabel"></span>
-</div>
 
-<div class="tools">
-    <input id="searchInput" placeholder="🔍 Szukaj gracza">
+    <input id="searchInput" placeholder="🔍 gracz">
     <button id="resetView">Reset</button>
-    <button id="heatmapBtn">🔥 Heatmap</button>
+    <button id="heatmapBtn">🔥</button>
 </div>
 
-<canvas id="chart"></canvas>
-<canvas id="tribeChart"></canvas>
+<!-- 📅 GRID DAT -->
+<div class="card">
+    <h3>📅 Historia</h3>
+    <div id="dateGrid" class="date-grid"></div>
+</div>
 
-<div class="container">
-    <div class="table-box">
-        <table id="table">
-            <tbody></tbody>
-        </table>
-    </div>
-    <div class="map-box">
-        <canvas id="map"></canvas>
-    </div>
+<!-- 📊 WYKRESY -->
+<div class="card">
+    <h3>📈 Wzrost świata</h3>
+    <canvas id="chart"></canvas>
+</div>
+
+<div class="card">
+    <h3>🏰 Plemiona w czasie</h3>
+    <canvas id="tribeChart"></canvas>
+</div>
+
+<!-- 🗺️ MAPA -->
+<div class="card">
+    <h3>🗺️ Mapa dominacji</h3>
+    <canvas id="map"></canvas>
+    <div id="legend"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
