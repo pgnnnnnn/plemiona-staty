@@ -6,8 +6,6 @@
 <link rel="stylesheet" href="style.css">
 
 <style>
-body { background:#0f0f0f; color:#fff; font-family:sans-serif; }
-
 table {
   width:100%;
   border-collapse:collapse;
@@ -16,8 +14,8 @@ table {
 
 th, td {
   padding:10px;
-  text-align:center;
   border-bottom:1px solid #1a1a1a;
+  text-align:center;
 }
 
 th {
@@ -25,12 +23,12 @@ th {
   cursor:pointer;
 }
 
-/* 📐 KOLUMNY */
-th:nth-child(1), td:nth-child(1) { width:60px; }
-th:nth-child(2), td:nth-child(2) { width:40%; text-align:left; }
-th:nth-child(3), td:nth-child(3) { width:20%; }
-th:nth-child(4), td:nth-child(4) { width:15%; }
-th:nth-child(5), td:nth-child(5) { width:20%; }
+/* 📐 kolumny */
+th:nth-child(1), td:nth-child(1){ width:60px; }
+th:nth-child(2), td:nth-child(2){ width:40%; text-align:left; }
+th:nth-child(3), td:nth-child(3){ width:20%; }
+th:nth-child(4), td:nth-child(4){ width:15%; }
+th:nth-child(5), td:nth-child(5){ width:20%; }
 
 /* hover */
 tr:hover { background:#1a1a1a; }
@@ -40,7 +38,6 @@ tr:hover { background:#1a1a1a; }
 .top2 { background:rgba(192,192,192,0.1); }
 .top3 { background:rgba(205,127,50,0.1); }
 
-/* search */
 .search {
   width:100%;
   padding:10px;
@@ -53,6 +50,24 @@ tr:hover { background:#1a1a1a; }
 </head>
 
 <body>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="toggle" onclick="toggle()">☰</div>
+  <div class="logo">STATY</div>
+
+  <div class="menu">
+    <a href="/">🏠 Dashboard</a>
+    <a href="/players.html" class="active">👤 Gracze</a>
+    <a href="/tribes.html">⚔️ Plemiona</a>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+<div class="panel">
 
 <input class="search" placeholder="Szukaj..." oninput="searchPlayer(this.value)">
 
@@ -70,7 +85,26 @@ tr:hover { background:#1a1a1a; }
 <tbody id="t"></tbody>
 </table>
 
+</div>
+</div>
+
+</div>
+
 <script>
+// sidebar toggle
+function toggle(){
+  const s=document.getElementById("sidebar");
+  s.classList.toggle("collapsed");
+  localStorage.setItem("sidebar", s.classList.contains("collapsed"));
+}
+
+window.onload=()=>{
+  if(localStorage.getItem("sidebar")==="true"){
+    document.getElementById("sidebar").classList.add("collapsed");
+  }
+};
+
+// DATA
 let data=[];
 let filtered=[];
 let sortKey="points";
