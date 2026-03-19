@@ -7,16 +7,20 @@
 </head>
 <body>
 
+<div class="nav">
+  <div class="logo">STATY 224</div>
+</div>
+
 <div class="container panel">
 
-<h1>Plemiona</h1>
+<h1>Ranking plemion</h1>
 
-<input id="search" placeholder="Szukaj...">
+<input id="search" placeholder="Szukaj plemienia...">
 
 <table>
 <thead>
 <tr>
-<th onclick="sortBy('rank')">#</th>
+<th onclick="sortBy('points')">#</th>
 <th onclick="sortBy('tag')">Tag</th>
 <th onclick="sortBy('points')">Punkty</th>
 <th onclick="sortBy('villages')">Wioski</th>
@@ -42,7 +46,7 @@ async function init(){
 function sortBy(key){
   if(sortKey===key){
     asc=!asc;
-  }else{
+  } else {
     sortKey=key;
     asc=false;
   }
@@ -66,15 +70,22 @@ function render(){
   let i=1;
 
   document.getElementById("t").innerHTML =
-  list.slice(0,200).map(x=>`
-    <tr onclick="openTribe(${x.id})">
-      <td>${i++}</td>
+  list.slice(0,200).map(x=>{
+    let cls="";
+    if(i===1) cls="gold";
+    if(i===2) cls="silver";
+    if(i===3) cls="bronze";
+
+    return `
+    <tr class="${cls}" onclick="openTribe(${x.id})">
+      <td>${i}</td>
       <td style="color:${x.color}">${x.tag}</td>
       <td>${x.points}</td>
       <td>${x.villages}</td>
       <td>${x.members}</td>
-    </tr>
-  `).join("");
+    </tr>`;
+    i++;
+  }).join("");
 }
 
 function openTribe(id){
