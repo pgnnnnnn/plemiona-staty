@@ -1,20 +1,11 @@
 {
-  "name": "statystyki-224",
+  "name": "plemiona-staty",
   "version": "1.0.0",
-  "description": "Panel statystyk świata 224 Plemiona",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
   "dependencies": {
-    "axios": "^1.6.0",
     "express": "^4.18.2",
-    "iconv-lite": "^0.6.3",
+    "axios": "^1.7.0",
+    "cheerio": "^1.0.0-rc.12",
     "sqlite3": "^5.1.6"
-  },
-  "engines": {
-    "node": "18.x"
-  },
-  "author": "",
-  "license": "ISC"
+  }
 }
