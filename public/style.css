@@ -1,79 +1,67 @@
 body {
-    background:#f5f6f8;
-    font-family:Arial;
     margin:0;
+    font-family:Verdana;
+    background:#1b1b1b;
+    color:#eee;
 }
 
-h1 {
-    padding:20px;
-}
-
-.top-bar {
-    padding:10px;
-    background:white;
+.header {
+    background:#2a2a2a;
+    padding:15px;
     display:flex;
-    gap:10px;
+    justify-content:space-between;
     align-items:center;
-    border-bottom:1px solid #ddd;
+    border-bottom:2px solid #444;
 }
 
-.grid {
-    display:flex;
-    gap:20px;
+.controls select,
+.controls button {
+    padding:5px;
+    background:#333;
+    color:white;
+    border:none;
+}
+
+.container {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+    padding:15px;
 }
 
 .card {
-    background:white;
-    margin:20px;
-    padding:15px;
-    border-radius:10px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.1);
-}
-
-canvas {
-    width:100%;
-    background:black;
-    border-radius:10px;
-}
-
-.date-grid {
-    display:flex;
-    flex-wrap:wrap;
-    gap:5px;
-}
-
-.date-btn {
-    padding:5px 10px;
-    background:#eee;
+    background:#2a2a2a;
+    padding:10px;
     border-radius:5px;
-    cursor:pointer;
+    border:1px solid #444;
 }
 
-.date-btn.active {
-    background:#4caf50;
-    color:white;
+.card.full {
+    grid-column:1 / -1;
 }
 
-#tribeTable {
+table {
     width:100%;
     border-collapse:collapse;
 }
 
-#tribeTable th {
-    background:#222;
-    color:white;
-    padding:8px;
+th {
+    background:#333;
 }
 
-#tribeTable td {
-    padding:8px;
-    border-bottom:1px solid #ddd;
+td, th {
+    padding:6px;
+    border-bottom:1px solid #444;
+    text-align:center;
 }
 
-#tooltip {
-    position:absolute;
+tr:hover {
+    background:#3a3a3a;
+}
+
+canvas {
+    width:100%;
+    height:600px;
     background:black;
-    color:white;
-    padding:5px;
-    display:none;
+    border:1px solid #444;
 }
