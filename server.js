@@ -6,10 +6,18 @@ const app = express();
 const PORT = 3000;
 const WORLD = "pl224";
 
-// init
+// 🔥 FIX HISTORY (najważniejsze)
+if (fs.existsSync("history") && !fs.lstatSync("history").isDirectory()) {
+    fs.unlinkSync("history");
+}
+
+if (!fs.existsSync("history")) {
+    fs.mkdirSync("history");
+}
+
+// init plików
 if (!fs.existsSync("data.json")) fs.writeFileSync("data.json", "[]");
 if (!fs.existsSync("villages.json")) fs.writeFileSync("villages.json", "[]");
-if (!fs.existsSync("history")) fs.mkdirSync("history");
 
 // zapis historii
 function saveHistory(players) {
@@ -17,7 +25,7 @@ function saveHistory(players) {
     fs.writeFileSync(`history/${date}.json`, JSON.stringify(players));
 }
 
-// fetch
+// fetch danych
 async function fetchData() {
     try {
         const [playersRes, villagesRes] = await Promise.all([
@@ -80,7 +88,11 @@ app.get("/api/villages", (req, res) => {
 });
 
 app.get("/api/history", (req, res) => {
-    res.json(fs.readdirSync("history"));
+    try {
+        res.json(fs.readdirSync("history"));
+    } catch {
+        res.json([]);
+    }
 });
 
 app.get("/api/history/:date", (req, res) => {
