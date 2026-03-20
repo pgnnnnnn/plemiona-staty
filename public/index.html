@@ -1,63 +1,52 @@
-<!DOCTYPE html>
-<th>Plemię</th>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Staty Plemiion</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
+const express = require("express");
+const axios = require("axios");
 
-<div class="header">
-    <h1>📊 Staty Plemiion</h1>
+const app = express();
+const PORT = 3000;
 
-    <div class="controls">
-        <select id="world">
-            <option value="pl224">pl224</option>
-            <option value="pl226">pl226</option>
-        </select>
+app.get("/api/data/:world", async (req, res) => {
+    try {
+        const world = req.params.world;
 
-        <button id="warBtn">🔥 Wojny</button>
-    </div>
-</div>
+        const [playersRes, villagesRes, allyRes] = await Promise.all([
+            axios.get(`https://${world}.plemiona.pl/map/player.txt`),
+            axios.get(`https://${world}.plemiona.pl/map/village.txt`),
+            axios.get(`https://${world}.plemiona.pl/map/ally.txt`)
+        ]);
 
-<div class="container">
+        // 🏰 plemiona
+        const allyMap = {};
+        allyRes.data.split("\n").filter(l=>l).forEach(l=>{
+            const [id,name,tag] = l.split(",");
+            allyMap[id] = decodeURIComponent(tag || "");
+        });
 
-    <div class="card">
-        <h2>👤 Gracze</h2>
-        <table id="table">
-            <thead>
-                <tr><th>#</th><th>Gracz</th><th>Punkty</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
+        // 👤 gracze
+        const players = playersRes.data.split("\n").filter(l=>l).map(l=>{
+            const [id,name,tribe,villages,points] = l.split(",");
+            return {
+                id,
+                name: decodeURIComponent(name),
+                tribeTag: allyMap[tribe] || "-",
+                villages: +villages,
+                points: +points
+            };
+        });
 
-    <div class="card">
-        <h2>🏰 Plemiona</h2>
-        <table id="tribes">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Plemię</th>
-                    <th>Punkty</th>
-                    <th>Gracze</th>
-                    <th>Wioski</th>
-                    <th>⚔️</th>
-                    <th>🛡️</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
+        // 🗺️ wioski
+        const villages = villagesRes.data.split("\n").filter(l=>l).map(l=>{
+            const [id,name,x,y,player] = l.split(",");
+            return {id, x:+x, y:+y, player};
+        });
 
-    <div class="card full">
-        <h2>🗺️ Mapa (scroll = zoom, drag = przesuwanie)</h2>
-        <canvas id="map"></canvas>
-    </div>
+        res.json({players, villages});
 
-</div>
+    } catch (e) {
+        console.log(e.message);
+        res.json({players:[], villages:[]});
+    }
+});
 
-<script src="app.js"></script>
-</body>
-</html>
+app.use(express.static("public"));
+
+app.listen(PORT, () => console.log("🚀 działa"));
