@@ -8,6 +8,9 @@ canvas.width = 800;
 canvas.height = 800;
 
 let warMode = false;
+let selectedTribe = null;
+let lastGrid = {};
+let cellSize = 5;
 
 const tribeColors = {};
 
@@ -18,10 +21,26 @@ function getColor(t){
     return tribeColors[t];
 }
 
-document.getElementById("world").onchange = load;
-document.getElementById("warBtn").onclick = ()=>{warMode=!warMode;load();};
+// 🔥 TOOLTIP
+const tooltip = document.createElement("div");
+tooltip.style.position = "absolute";
+tooltip.style.background = "black";
+tooltip.style.color = "white";
+tooltip.style.padding = "4px 6px";
+tooltip.style.fontSize = "12px";
+tooltip.style.display = "none";
+tooltip.style.pointerEvents = "none";
 
-// 🔥 STATY
+document.body.appendChild(tooltip);
+
+// controls
+document.getElementById("world").onchange = load;
+document.getElementById("warBtn").onclick = ()=>{
+    warMode = !warMode;
+    load();
+};
+
+// 🧠 STATY
 function buildTribes(data){
 
     const war = {};
@@ -82,6 +101,8 @@ function drawMap(data){
     ctx.fillStyle="black";
     ctx.fillRect(0,0,800,800);
 
+    lastGrid = grid;
+
     Object.keys(grid).forEach(k=>{
         const [gx,gy]=k.split("_");
 
@@ -93,16 +114,71 @@ function drawMap(data){
             }
         }
 
-        if(warMode && warGrid[k]){
+        if(selectedTribe && maxT !== selectedTribe){
+            ctx.fillStyle="rgba(50,50,50,0.2)";
+        } else if(warMode && warGrid[k]){
             ctx.fillStyle=`rgba(255,0,0,${Math.min(warGrid[k]/5,1)})`;
         } else {
             ctx.fillStyle=getColor(maxT);
         }
 
-        ctx.fillRect(gx*5,gy*5,5,5);
+        ctx.fillRect(gx*cellSize,gy*cellSize,cellSize,cellSize);
     });
 }
 
+// 🖱️ HOVER
+canvas.addEventListener("mousemove", e=>{
+    const rect = canvas.getBoundingClientRect();
+
+    const x = Math.floor((e.clientX - rect.left) / cellSize);
+    const y = Math.floor((e.clientY - rect.top) / cellSize);
+
+    const key = x + "_" + y;
+
+    if(lastGrid[key]){
+        let maxT=null,max=0;
+
+        for(let t in lastGrid[key]){
+            if(lastGrid[key][t]>max){
+                max=lastGrid[key][t];
+                maxT=t;
+            }
+        }
+
+        tooltip.style.display="block";
+        tooltip.style.left = e.clientX + 10 + "px";
+        tooltip.style.top = e.clientY + 10 + "px";
+        tooltip.innerHTML = `Plemię: ${maxT}`;
+    } else {
+        tooltip.style.display="none";
+    }
+});
+
+// 🎯 KLIK
+canvas.addEventListener("click", e=>{
+    const rect = canvas.getBoundingClientRect();
+
+    const x = Math.floor((e.clientX - rect.left) / cellSize);
+    const y = Math.floor((e.clientY - rect.top) / cellSize);
+
+    const key = x + "_" + y;
+
+    if(lastGrid[key]){
+        let maxT=null,max=0;
+
+        for(let t in lastGrid[key]){
+            if(lastGrid[key][t]>max){
+                max=lastGrid[key][t];
+                maxT=t;
+            }
+        }
+
+        selectedTribe = (selectedTribe === maxT) ? null : maxT;
+        load();
+    }
+});
+
+// 🚀 LOAD
 async function load(){
 
     const world=document.getElementById("world").value;
