@@ -2,9 +2,8 @@ const express = require("express");
 const axios = require("axios");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// bezpieczne dekodowanie
 function decode(str){
     try {
         return decodeURIComponent(str);
@@ -17,25 +16,22 @@ app.get("/api/data/:world", async (req, res) => {
     try {
         const world = req.params.world;
 
-        const playersTxt = await axios.get(`https://${world}.plemiona.pl/map/player.txt`);
-        const villagesTxt = await axios.get(`https://${world}.plemiona.pl/map/village.txt`);
-        const allyTxt = await axios.get(`https://${world}.plemiona.pl/map/ally.txt`);
+        const [playersRes, villagesRes, allyRes] = await Promise.all([
+            axios.get(`https://${world}.plemiona.pl/map/player.txt`),
+            axios.get(`https://${world}.plemiona.pl/map/village.txt`),
+            axios.get(`https://${world}.plemiona.pl/map/ally.txt`)
+        ]);
 
-        // 🏰 plemiona
         const allyMap = {};
 
-        allyTxt.data.split("\n").forEach(line => {
+        allyRes.data.split("\n").forEach(line => {
             if(!line) return;
 
             const parts = line.split(",");
-            const id = parts[0];
-            const tag = parts[2]; // 🔥 NAJWAŻNIEJSZE
-
-            allyMap[id] = decode(tag);
+            allyMap[parts[0]] = decode(parts[2]);
         });
 
-        // 👤 gracze
-        const players = playersTxt.data.split("\n").map(line => {
+        const players = playersRes.data.split("\n").map(line => {
             if(!line) return null;
 
             const parts = line.split(",");
@@ -49,8 +45,7 @@ app.get("/api/data/:world", async (req, res) => {
             };
         }).filter(Boolean);
 
-        // 🗺️ wioski
-        const villages = villagesTxt.data.split("\n").map(line => {
+        const villages = villagesRes.data.split("\n").map(line => {
             if(!line) return null;
 
             const parts = line.split(",");
@@ -73,4 +68,6 @@ app.get("/api/data/:world", async (req, res) => {
 
 app.use(express.static("public"));
 
-app.listen(PORT, () => console.log("🚀 działa"));
+app.listen(PORT, () => {
+    console.log("🚀 SERVER DZIAŁA");
+});
