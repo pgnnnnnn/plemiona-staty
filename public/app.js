@@ -1,72 +1,147 @@
+const table = document.querySelector("#table tbody");
+const tribeTable = document.querySelector("#tribes tbody");
+
 const canvas = document.getElementById("map");
 const ctx = canvas.getContext("2d");
 
 canvas.width = 800;
 canvas.height = 800;
 
-// 🔥 MAPA OBSZARÓW
-function drawMap(data, players, warStats){
+let warMode = false;
 
-    const gridSize = 10;
-    const grid = {};
-    const warGrid = {};
+const tribeColors = {};
 
-    const playerMap = {};
-    players.forEach(p => playerMap[p.id] = p.tribe);
+function getColor(t){
+    if(!tribeColors[t]){
+        tribeColors[t] = `hsl(${Math.random()*360},70%,50%)`;
+    }
+    return tribeColors[t];
+}
 
-    // dominacja
-    data.villages.forEach(v=>{
-        const tribe = playerMap[v.player] || "0";
+document.getElementById("world").onchange = load;
+document.getElementById("warBtn").onclick = ()=>{warMode=!warMode;load();};
 
-        const gx = Math.floor(v.x / gridSize);
-        const gy = Math.floor(v.y / gridSize);
-        const key = gx + "_" + gy;
+// 🔥 STATY
+function buildTribes(data){
 
-        if(!grid[key]) grid[key] = {};
-        grid[key][tribe] = (grid[key][tribe] || 0) + 1;
+    const war = {};
+
+    data.conquers.forEach(c=>{
+        if(!war[c.newPlayer]) war[c.newPlayer]={a:0,d:0};
+        if(!war[c.oldPlayer]) war[c.oldPlayer]={a:0,d:0};
+
+        war[c.newPlayer].a++;
+        war[c.oldPlayer].d++;
     });
 
-    // wojny
+    const tribes = {};
+
+    data.players.forEach(p=>{
+        if(!tribes[p.tribe]){
+            tribes[p.tribe]={points:0,members:0,villages:0,a:0,d:0};
+        }
+
+        tribes[p.tribe].points += p.points;
+        tribes[p.tribe].members++;
+        tribes[p.tribe].villages += p.villages;
+
+        if(war[p.id]){
+            tribes[p.tribe].a += war[p.id].a;
+            tribes[p.tribe].d += war[p.id].d;
+        }
+    });
+
+    return tribes;
+}
+
+// 🗺️ MAPA PRO
+function drawMap(data){
+
+    const gridSize=10;
+    const grid={}, warGrid={};
+
+    const playerMap={};
+    data.players.forEach(p=>playerMap[p.id]=p.tribe);
+
+    data.villages.forEach(v=>{
+        const t=playerMap[v.player]||"0";
+        const k=Math.floor(v.x/gridSize)+"_"+Math.floor(v.y/gridSize);
+
+        if(!grid[k]) grid[k]={};
+        grid[k][t]=(grid[k][t]||0)+1;
+    });
+
     data.conquers.forEach(c=>{
-        const v = data.villages.find(v=>v.id == c.village);
+        const v=data.villages.find(v=>v.id==c.village);
         if(!v) return;
 
-        const gx = Math.floor(v.x / gridSize);
-        const gy = Math.floor(v.y / gridSize);
-        const key = gx + "_" + gy;
-
-        warGrid[key] = (warGrid[key] || 0) + 1;
+        const k=Math.floor(v.x/gridSize)+"_"+Math.floor(v.y/gridSize);
+        warGrid[k]=(warGrid[k]||0)+1;
     });
 
     ctx.fillStyle="black";
     ctx.fillRect(0,0,800,800);
 
-    Object.keys(grid).forEach(key=>{
-        const [gx,gy] = key.split("_");
-
-        const tribes = grid[key];
+    Object.keys(grid).forEach(k=>{
+        const [gx,gy]=k.split("_");
 
         let maxT=null,max=0;
-
-        for(let t in tribes){
-            if(tribes[t] > max){
-                max = tribes[t];
-                maxT = t;
+        for(let t in grid[k]){
+            if(grid[k][t]>max){
+                max=grid[k][t];
+                maxT=t;
             }
         }
 
-        if(warMode && warGrid[key]){
-            const intensity = Math.min(warGrid[key]/5,1);
-            ctx.fillStyle = `rgba(255,0,0,${intensity})`;
+        if(warMode && warGrid[k]){
+            ctx.fillStyle=`rgba(255,0,0,${Math.min(warGrid[k]/5,1)})`;
         } else {
-            ctx.fillStyle = getColor(maxT);
+            ctx.fillStyle=getColor(maxT);
         }
 
-        ctx.fillRect(
-            gx * gridSize / 2,
-            gy * gridSize / 2,
-            gridSize / 2,
-            gridSize / 2
-        );
+        ctx.fillRect(gx*5,gy*5,5,5);
     });
 }
+
+async function load(){
+
+    const world=document.getElementById("world").value;
+    const data=await fetch(`/api/data/${world}`).then(r=>r.json());
+
+    // gracze
+    table.innerHTML="";
+    data.players.sort((a,b)=>b.points-a.points).slice(0,20).forEach((p,i)=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML=`
+            <td>${i+1}</td>
+            <td style="color:${getColor(p.tribe)}">${p.name}</td>
+            <td>${p.points.toLocaleString()}</td>
+        `;
+        table.appendChild(tr);
+    });
+
+    // plemiona
+    const tribes=buildTribes(data);
+
+    tribeTable.innerHTML="";
+    Object.entries(tribes)
+        .sort((a,b)=>b[1].points-a[1].points)
+        .slice(0,20)
+        .forEach(([t,d],i)=>{
+            const tr=document.createElement("tr");
+            tr.innerHTML=`
+                <td>${i+1}</td>
+                <td style="color:${getColor(t)}">${t}</td>
+                <td>${d.points.toLocaleString()}</td>
+                <td>${d.members}</td>
+                <td>${d.villages}</td>
+                <td style="color:red">${d.a}</td>
+                <td style="color:blue">${d.d}</td>
+            `;
+            tribeTable.appendChild(tr);
+        });
+
+    drawMap(data);
+}
+
+load();
