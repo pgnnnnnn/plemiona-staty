@@ -14,39 +14,58 @@ app.get("/api/data/:world", async (req, res) => {
             axios.get(`https://${world}.plemiona.pl/map/ally.txt`)
         ]);
 
-        // 🏰 plemiona
+        // 🏰 plemiona (mapa ID → TAG)
         const allyMap = {};
-        allyRes.data.split("\n").filter(l=>l).forEach(l=>{
-            const [id,name,tag] = l.split(",");
-            allyMap[id] = decodeURIComponent(tag || "");
-        });
+
+        allyRes.data
+            .split("\n")
+            .filter(line => line)
+            .forEach(line => {
+                const [id, name, tag] = line.split(",");
+                allyMap[id] = decodeURIComponent(tag || "");
+            });
 
         // 👤 gracze
-        const players = playersRes.data.split("\n").filter(l=>l).map(l=>{
-            const [id,name,tribe,villages,points] = l.split(",");
-            return {
-                id,
-                name: decodeURIComponent(name),
-                tribeTag: allyMap[tribe] || "-",
-                villages: +villages,
-                points: +points
-            };
-        });
+        const players = playersRes.data
+            .split("\n")
+            .filter(line => line)
+            .map(line => {
+                const [id, name, tribe, villages, points] = line.split(",");
+
+                return {
+                    id,
+                    name: decodeURIComponent(name),
+                    tribeTag: allyMap[tribe] || "-",
+                    villages: +villages,
+                    points: +points
+                };
+            });
 
         // 🗺️ wioski
-        const villages = villagesRes.data.split("\n").filter(l=>l).map(l=>{
-            const [id,name,x,y,player] = l.split(",");
-            return {id, x:+x, y:+y, player};
-        });
+        const villages = villagesRes.data
+            .split("\n")
+            .filter(line => line)
+            .map(line => {
+                const [id, name, x, y, player] = line.split(",");
 
-        res.json({players, villages});
+                return {
+                    id,
+                    x: +x,
+                    y: +y,
+                    player
+                };
+            });
+
+        res.json({ players, villages });
 
     } catch (e) {
-        console.log(e.message);
-        res.json({players:[], villages:[]});
+        console.log("❌ ERROR:", e.message);
+        res.json({ players: [], villages: [] });
     }
 });
 
 app.use(express.static("public"));
 
-app.listen(PORT, () => console.log("🚀 działa"));
+app.listen(PORT, () => {
+    console.log("🚀 działa na porcie 3000");
+});
