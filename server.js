@@ -5,7 +5,7 @@ const app = express();
 const PORT = 3000;
 
 // bezpieczne dekodowanie
-function safeDecode(str){
+function decode(str){
     try {
         return decodeURIComponent(str);
     } catch {
@@ -17,63 +17,51 @@ app.get("/api/data/:world", async (req, res) => {
     try {
         const world = req.params.world;
 
-        const [playersRes, villagesRes, allyRes] = await Promise.all([
-            axios.get(`https://${world}.plemiona.pl/map/player.txt`),
-            axios.get(`https://${world}.plemiona.pl/map/village.txt`),
-            axios.get(`https://${world}.plemiona.pl/map/ally.txt`)
-        ]);
+        const playersTxt = await axios.get(`https://${world}.plemiona.pl/map/player.txt`);
+        const villagesTxt = await axios.get(`https://${world}.plemiona.pl/map/village.txt`);
+        const allyTxt = await axios.get(`https://${world}.plemiona.pl/map/ally.txt`);
 
-        // 🏰 plemiona (POPRAWNE)
+        // 🏰 plemiona
         const allyMap = {};
 
-        allyRes.data
-            .split("\n")
-            .filter(l => l)
-            .forEach(l => {
-                const parts = l.split(",");
+        allyTxt.data.split("\n").forEach(line => {
+            if(!line) return;
 
-                const id = parts[0];
-                const tag = parts[2]; // 🔥 TO JEST KLUCZ
+            const parts = line.split(",");
+            const id = parts[0];
+            const tag = parts[2]; // 🔥 NAJWAŻNIEJSZE
 
-                allyMap[id] = safeDecode(tag);
-            });
+            allyMap[id] = decode(tag);
+        });
 
         // 👤 gracze
-        const players = playersRes.data
-            .split("\n")
-            .filter(l => l)
-            .map(l => {
-                const parts = l.split(",");
+        const players = playersTxt.data.split("\n").map(line => {
+            if(!line) return null;
 
-                const id = parts[0];
-                const name = parts[1];
-                const tribe = parts[2];
-                const villages = parts[3];
-                const points = parts[4];
+            const parts = line.split(",");
 
-                return {
-                    id,
-                    name: safeDecode(name),
-                    tribeTag: allyMap[tribe] || "-",
-                    villages: +villages,
-                    points: +points
-                };
-            });
+            return {
+                id: parts[0],
+                name: decode(parts[1]),
+                tribeTag: allyMap[parts[2]] || "-",
+                villages: Number(parts[3]),
+                points: Number(parts[4])
+            };
+        }).filter(Boolean);
 
         // 🗺️ wioski
-        const villages = villagesRes.data
-            .split("\n")
-            .filter(l => l)
-            .map(l => {
-                const parts = l.split(",");
+        const villages = villagesTxt.data.split("\n").map(line => {
+            if(!line) return null;
 
-                return {
-                    id: parts[0],
-                    x: +parts[2],
-                    y: +parts[3],
-                    player: parts[4]
-                };
-            });
+            const parts = line.split(",");
+
+            return {
+                id: parts[0],
+                x: Number(parts[2]),
+                y: Number(parts[3]),
+                player: parts[4]
+            };
+        }).filter(Boolean);
 
         res.json({ players, villages });
 
@@ -85,6 +73,4 @@ app.get("/api/data/:world", async (req, res) => {
 
 app.use(express.static("public"));
 
-app.listen(PORT, () => {
-    console.log("🚀 działa");
-});
+app.listen(PORT, () => console.log("🚀 działa"));
