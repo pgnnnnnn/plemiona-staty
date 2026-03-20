@@ -1,52 +1,42 @@
-const express = require("express");
-const axios = require("axios");
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Staty</title>
+<style>
+body { background:#111; color:white; font-family:Arial; text-align:center; }
+table { margin:auto; border-collapse:collapse; }
+td,th { padding:6px; border:1px solid #333; }
+canvas { background:black; margin-top:20px; }
+</style>
+</head>
+<body>
 
-const app = express();
-const PORT = 3000;
+<h1>📊 Staty Plemiion</h1>
 
-app.get("/api/data/:world", async (req, res) => {
-    try {
-        const world = req.params.world;
+<select id="world">
+<option value="pl224">pl224</option>
+<option value="pl226">pl226</option>
+</select>
 
-        const [playersRes, villagesRes, allyRes] = await Promise.all([
-            axios.get(`https://${world}.plemiona.pl/map/player.txt`),
-            axios.get(`https://${world}.plemiona.pl/map/village.txt`),
-            axios.get(`https://${world}.plemiona.pl/map/ally.txt`)
-        ]);
+<h2>Gracze</h2>
+<table id="players">
+<thead>
+<tr><th>#</th><th>Gracz</th><th>Punkty</th></tr>
+</thead>
+<tbody></tbody>
+</table>
 
-        // 🏰 plemiona
-        const allyMap = {};
-        allyRes.data.split("\n").filter(l=>l).forEach(l=>{
-            const [id,name,tag] = l.split(",");
-            allyMap[id] = decodeURIComponent(tag || "");
-        });
+<h2>Plemiona</h2>
+<table id="tribes">
+<thead>
+<tr><th>#</th><th>Plemię</th><th>Punkty</th><th>Gracze</th></tr>
+</thead>
+<tbody></tbody>
+</table>
 
-        // 👤 gracze
-        const players = playersRes.data.split("\n").filter(l=>l).map(l=>{
-            const [id,name,tribe,villages,points] = l.split(",");
-            return {
-                id,
-                name: decodeURIComponent(name),
-                tribeTag: allyMap[tribe] || "-",
-                villages: +villages,
-                points: +points
-            };
-        });
+<canvas id="map" width="800" height="800"></canvas>
 
-        // 🗺️ wioski
-        const villages = villagesRes.data.split("\n").filter(l=>l).map(l=>{
-            const [id,name,x,y,player] = l.split(",");
-            return {id, x:+x, y:+y, player};
-        });
-
-        res.json({players, villages});
-
-    } catch (e) {
-        console.log(e.message);
-        res.json({players:[], villages:[]});
-    }
-});
-
-app.use(express.static("public"));
-
-app.listen(PORT, () => console.log("🚀 działa"));
+<script src="app.js"></script>
+</body>
+</html>
