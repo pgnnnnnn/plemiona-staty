@@ -15,43 +15,42 @@ app.get("/api/data/:world", async (req, res) => {
             axios.get(`https://${world}.plemiona.pl/map/ally.txt`)
         ]);
 
+        // 🏰 plemiona (ID → TAG)
+        const allyMap = {};
+        allyRes.data.split("\n").filter(l=>l).forEach(l=>{
+            const [id,name,tag]=l.split(",");
+            allyMap[id] = decodeURIComponent(tag);
+        });
+
+        // 👤 gracze
         const players = playersRes.data.split("\n").filter(l=>l).map(l=>{
             const [id,name,tribe,villages,points]=l.split(",");
             return {
                 id,
                 name: decodeURIComponent(name),
                 tribe,
+                tribeTag: allyMap[tribe] || "-",
                 villages:+villages,
                 points:+points
             };
         });
 
+        // 🗺️ wioski
         const villages = villagesRes.data.split("\n").filter(l=>l).map(l=>{
             const [id,name,x,y,player]=l.split(",");
             return {id,x:+x,y:+y,player};
         });
 
+        // ⚔️ wojny
         const conquers = conquerRes.data.split("\n").filter(l=>l).map(l=>{
             const [village,timestamp,newPlayer,oldPlayer]=l.split(",");
             return {village,newPlayer,oldPlayer};
         });
 
-        const allies = allyRes.data.split("\n").filter(l=>l).map(l=>{
-            const [id,name,tag,members,villages,points]=l.split(",");
-            return {
-                id,
-                name: decodeURIComponent(name),
-                tag: decodeURIComponent(tag),
-                members:+members,
-                villages:+villages,
-                points:+points
-            };
-        });
+        res.json({players, villages, conquers});
 
-        res.json({players, villages, conquers, allies});
-
-    } catch {
-        res.json({players:[], villages:[], conquers:[], allies:[]});
+    } catch (e) {
+        res.json({players:[], villages:[], conquers:[]});
     }
 });
 
