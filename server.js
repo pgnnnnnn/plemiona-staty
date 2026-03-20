@@ -1,19 +1,18 @@
 const express = require("express");
 const axios = require("axios");
-const cheerio = require("cheerio");
 
 const app = express();
 const PORT = 3000;
 
-// 🔥 GŁÓWNE DANE
 app.get("/api/data/:world", async (req, res) => {
     try {
         const world = req.params.world;
 
-        const [playersRes, villagesRes, conquerRes] = await Promise.all([
+        const [playersRes, villagesRes, conquerRes, allyRes] = await Promise.all([
             axios.get(`https://${world}.plemiona.pl/map/player.txt`),
             axios.get(`https://${world}.plemiona.pl/map/village.txt`),
-            axios.get(`https://${world}.plemiona.pl/map/conquer.txt`)
+            axios.get(`https://${world}.plemiona.pl/map/conquer.txt`),
+            axios.get(`https://${world}.plemiona.pl/map/ally.txt`)
         ]);
 
         const players = playersRes.data.split("\n").filter(l=>l).map(l=>{
@@ -31,40 +30,15 @@ app.get("/api/data/:world", async (req, res) => {
             return {village,newPlayer,oldPlayer};
         });
 
-        res.json({players, villages, conquers});
-
-    } catch {
-        res.json({players:[], villages:[], conquers:[]});
-    }
-});
-
-
-// 🔥 GUEST (oficjalny ranking)
-app.get("/api/guest/:world", async (req,res)=>{
-    try{
-        const world = req.params.world;
-
-        const html = await axios.get(`https://${world}.plemiona.pl/guest.php`);
-        const $ = cheerio.load(html.data);
-
-        const tribes = [];
-
-        $("table tr").each((i,row)=>{
-            const cols = $(row).find("td");
-
-            if(cols.length >= 4){
-                tribes.push({
-                    name: $(cols[1]).text().trim(),
-                    points: $(cols[2]).text().trim(),
-                    members: $(cols[3]).text().trim()
-                });
-            }
+        const allies = allyRes.data.split("\n").filter(l=>l).map(l=>{
+            const [id,name,tag,members,villages,points]=l.split(",");
+            return {id,name,tag,members:+members,villages:+villages,points:+points};
         });
 
-        res.json({tribes});
+        res.json({players, villages, conquers, allies});
 
-    }catch{
-        res.json({tribes:[]});
+    } catch {
+        res.json({players:[], villages:[], conquers:[], allies:[]});
     }
 });
 
