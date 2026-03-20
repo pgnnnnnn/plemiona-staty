@@ -8,9 +8,11 @@ canvas.width = 800;
 canvas.height = 800;
 
 let warMode = false;
-let selectedTribe = null;
-let lastGrid = {};
-let cellSize = 5;
+let scale = 1;
+let offsetX = 0;
+let offsetY = 0;
+let isDragging = false;
+let startX, startY;
 
 const tribeColors = {};
 
@@ -21,87 +23,82 @@ function getColor(t){
     return tribeColors[t];
 }
 
-// 🔥 TOOLTIP
-const tooltip = document.createElement("div");
-tooltip.style.position = "absolute";
-tooltip.style.background = "black";
-tooltip.style.color = "white";
-tooltip.style.padding = "4px 6px";
-tooltip.style.fontSize = "12px";
-tooltip.style.display = "none";
-tooltip.style.pointerEvents = "none";
-
-document.body.appendChild(tooltip);
-
-// controls
 document.getElementById("world").onchange = load;
-document.getElementById("warBtn").onclick = ()=>{
-    warMode = !warMode;
-    load();
-};
+document.getElementById("warBtn").onclick = ()=>{warMode=!warMode;load();};
 
-// 🧠 STATY
-function buildTribes(data){
+// 🔥 ZOOM
+canvas.addEventListener("wheel", e=>{
+    e.preventDefault();
 
-    const war = {};
+    const zoom = e.deltaY > 0 ? 0.9 : 1.1;
+    scale *= zoom;
 
-    data.conquers.forEach(c=>{
-        if(!war[c.newPlayer]) war[c.newPlayer]={a:0,d:0};
-        if(!war[c.oldPlayer]) war[c.oldPlayer]={a:0,d:0};
+    draw();
+});
 
-        war[c.newPlayer].a++;
-        war[c.oldPlayer].d++;
-    });
+// 🔥 DRAG
+canvas.addEventListener("mousedown", e=>{
+    isDragging = true;
+    startX = e.clientX - offsetX;
+    startY = e.clientY - offsetY;
+    canvas.style.cursor = "grabbing";
+});
 
-    const tribes = {};
+canvas.addEventListener("mouseup", ()=>{
+    isDragging = false;
+    canvas.style.cursor = "grab";
+});
 
-    data.players.forEach(p=>{
-        if(!tribes[p.tribe]){
-            tribes[p.tribe]={points:0,members:0,villages:0,a:0,d:0};
-        }
+canvas.addEventListener("mousemove", e=>{
+    if(isDragging){
+        offsetX = e.clientX - startX;
+        offsetY = e.clientY - startY;
+        draw();
+    }
+});
 
-        tribes[p.tribe].points += p.points;
-        tribes[p.tribe].members++;
-        tribes[p.tribe].villages += p.villages;
+let currentData = null;
 
-        if(war[p.id]){
-            tribes[p.tribe].a += war[p.id].a;
-            tribes[p.tribe].d += war[p.id].d;
-        }
-    });
+// 🧠 MAPA
+function draw(){
 
-    return tribes;
-}
+    if(!currentData) return;
 
-// 🗺️ MAPA PRO
-function drawMap(data){
+    const data = currentData;
 
-    const gridSize=10;
-    const grid={}, warGrid={};
+    const gridSize = 10;
+    const mapSize = 1000;
 
     const playerMap={};
     data.players.forEach(p=>playerMap[p.id]=p.tribe);
 
+    const grid={}, warGrid={};
+
     data.villages.forEach(v=>{
         const t=playerMap[v.player]||"0";
-        const k=Math.floor(v.x/gridSize)+"_"+Math.floor(v.y/gridSize);
+        const gx=Math.floor(v.x/gridSize);
+        const gy=Math.floor(v.y/gridSize);
+        const key=gx+"_"+gy;
 
-        if(!grid[k]) grid[k]={};
-        grid[k][t]=(grid[k][t]||0)+1;
+        if(!grid[key]) grid[key]={};
+        grid[key][t]=(grid[key][t]||0)+1;
     });
 
     data.conquers.forEach(c=>{
         const v=data.villages.find(v=>v.id==c.village);
         if(!v) return;
 
-        const k=Math.floor(v.x/gridSize)+"_"+Math.floor(v.y/gridSize);
-        warGrid[k]=(warGrid[k]||0)+1;
+        const gx=Math.floor(v.x/gridSize);
+        const gy=Math.floor(v.y/gridSize);
+        const key=gx+"_"+gy;
+
+        warGrid[key]=(warGrid[key]||0)+1;
     });
 
-    ctx.fillStyle="black";
-    ctx.fillRect(0,0,800,800);
+    ctx.setTransform(scale,0,0,scale,offsetX,offsetY);
 
-    lastGrid = grid;
+    ctx.fillStyle="black";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
     Object.keys(grid).forEach(k=>{
         const [gx,gy]=k.split("_");
@@ -114,75 +111,25 @@ function drawMap(data){
             }
         }
 
-        if(selectedTribe && maxT !== selectedTribe){
-            ctx.fillStyle="rgba(50,50,50,0.2)";
-        } else if(warMode && warGrid[k]){
+        if(warMode && warGrid[k]){
             ctx.fillStyle=`rgba(255,0,0,${Math.min(warGrid[k]/5,1)})`;
         } else {
             ctx.fillStyle=getColor(maxT);
         }
 
-        ctx.fillRect(gx*cellSize,gy*cellSize,cellSize,cellSize);
+        ctx.fillRect(gx*10,gy*10,10,10);
     });
+
+    ctx.setTransform(1,0,0,1,0,0);
 }
-
-// 🖱️ HOVER
-canvas.addEventListener("mousemove", e=>{
-    const rect = canvas.getBoundingClientRect();
-
-    const x = Math.floor((e.clientX - rect.left) / cellSize);
-    const y = Math.floor((e.clientY - rect.top) / cellSize);
-
-    const key = x + "_" + y;
-
-    if(lastGrid[key]){
-        let maxT=null,max=0;
-
-        for(let t in lastGrid[key]){
-            if(lastGrid[key][t]>max){
-                max=lastGrid[key][t];
-                maxT=t;
-            }
-        }
-
-        tooltip.style.display="block";
-        tooltip.style.left = e.clientX + 10 + "px";
-        tooltip.style.top = e.clientY + 10 + "px";
-        tooltip.innerHTML = `Plemię: ${maxT}`;
-    } else {
-        tooltip.style.display="none";
-    }
-});
-
-// 🎯 KLIK
-canvas.addEventListener("click", e=>{
-    const rect = canvas.getBoundingClientRect();
-
-    const x = Math.floor((e.clientX - rect.left) / cellSize);
-    const y = Math.floor((e.clientY - rect.top) / cellSize);
-
-    const key = x + "_" + y;
-
-    if(lastGrid[key]){
-        let maxT=null,max=0;
-
-        for(let t in lastGrid[key]){
-            if(lastGrid[key][t]>max){
-                max=lastGrid[key][t];
-                maxT=t;
-            }
-        }
-
-        selectedTribe = (selectedTribe === maxT) ? null : maxT;
-        load();
-    }
-});
 
 // 🚀 LOAD
 async function load(){
 
     const world=document.getElementById("world").value;
     const data=await fetch(`/api/data/${world}`).then(r=>r.json());
+
+    currentData = data;
 
     // gracze
     table.innerHTML="";
@@ -197,7 +144,17 @@ async function load(){
     });
 
     // plemiona
-    const tribes=buildTribes(data);
+    const tribes={};
+
+    data.players.forEach(p=>{
+        if(!tribes[p.tribe]){
+            tribes[p.tribe]={points:0,members:0,villages:0};
+        }
+
+        tribes[p.tribe].points+=p.points;
+        tribes[p.tribe].members++;
+        tribes[p.tribe].villages+=p.villages;
+    });
 
     tribeTable.innerHTML="";
     Object.entries(tribes)
@@ -211,13 +168,13 @@ async function load(){
                 <td>${d.points.toLocaleString()}</td>
                 <td>${d.members}</td>
                 <td>${d.villages}</td>
-                <td style="color:red">${d.a}</td>
-                <td style="color:blue">${d.d}</td>
+                <td>-</td>
+                <td>-</td>
             `;
             tribeTable.appendChild(tr);
         });
 
-    drawMap(data);
+    draw();
 }
 
 load();
