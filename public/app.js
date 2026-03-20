@@ -1,6 +1,5 @@
-const table = document.querySelector("#table tbody");
-const tribeTable = document.querySelector("#tribes tbody");
-
+const playersTable = document.querySelector("#players tbody");
+const tribesTable = document.querySelector("#tribes tbody");
 const canvas = document.getElementById("map");
 const ctx = canvas.getContext("2d");
 
@@ -21,19 +20,21 @@ async function load(){
     const data = await fetch(`/api/data/${world}`).then(r=>r.json());
 
     // 👤 gracze
-    table.innerHTML = "";
+    playersTable.innerHTML = "";
 
     data.players
         .sort((a,b)=>b.points-a.points)
         .slice(0,20)
         .forEach((p,i)=>{
-            const tr=document.createElement("tr");
-            tr.innerHTML=`
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
                 <td>${i+1}</td>
                 <td style="color:${getColor(p.tribeTag)}">${p.name}</td>
                 <td>${p.points.toLocaleString()}</td>
             `;
-            table.appendChild(tr);
+
+            playersTable.appendChild(tr);
         });
 
     // 🏰 plemiona
@@ -41,30 +42,32 @@ async function load(){
 
     data.players.forEach(p=>{
         if(!tribes[p.tribeTag]){
-            tribes[p.tribeTag]={points:0,members:0};
+            tribes[p.tribeTag] = {points:0, members:0};
         }
 
         tribes[p.tribeTag].points += p.points;
         tribes[p.tribeTag].members++;
     });
 
-    tribeTable.innerHTML = "";
+    tribesTable.innerHTML = "";
 
     Object.entries(tribes)
-        .sort((a,b)=>b[1].points-a[1].points)
+        .sort((a,b)=>b[1].points - a[1].points)
         .slice(0,20)
         .forEach(([t,d],i)=>{
-            const tr=document.createElement("tr");
-            tr.innerHTML=`
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
                 <td>${i+1}</td>
                 <td style="color:${getColor(t)}">${t}</td>
                 <td>${d.points.toLocaleString()}</td>
                 <td>${d.members}</td>
             `;
-            tribeTable.appendChild(tr);
+
+            tribesTable.appendChild(tr);
         });
 
-    // 🗺️ MAPA (NAPRAWIONA)
+    // 🗺️ MAPA (PEŁNA)
     const playerMap = {};
     data.players.forEach(p=>playerMap[p.id]=p.tribeTag);
 
@@ -77,7 +80,7 @@ async function load(){
         ctx.fillStyle = getColor(tribe);
 
         ctx.fillRect(
-            v.x * 0.8,  // SKALA
+            v.x * 0.8,
             v.y * 0.8,
             2,
             2
