@@ -17,7 +17,13 @@ app.get("/api/data/:world", async (req, res) => {
 
         const players = playersRes.data.split("\n").filter(l=>l).map(l=>{
             const [id,name,tribe,villages,points]=l.split(",");
-            return {id,name,tribe,villages:+villages,points:+points};
+            return {
+                id,
+                name: decodeURIComponent(name),
+                tribe,
+                villages:+villages,
+                points:+points
+            };
         });
 
         const villages = villagesRes.data.split("\n").filter(l=>l).map(l=>{
@@ -32,7 +38,14 @@ app.get("/api/data/:world", async (req, res) => {
 
         const allies = allyRes.data.split("\n").filter(l=>l).map(l=>{
             const [id,name,tag,members,villages,points]=l.split(",");
-            return {id,name,tag,members:+members,villages:+villages,points:+points};
+            return {
+                id,
+                name: decodeURIComponent(name),
+                tag: decodeURIComponent(tag),
+                members:+members,
+                villages:+villages,
+                points:+points
+            };
         });
 
         res.json({players, villages, conquers, allies});
@@ -43,5 +56,4 @@ app.get("/api/data/:world", async (req, res) => {
 });
 
 app.use(express.static("public"));
-
 app.listen(PORT, () => console.log("🚀 działa"));
